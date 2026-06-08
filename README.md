@@ -45,7 +45,9 @@ Opportunity = (0.20·Demand + 0.25·Winnability + 0.25·AI-Resistance + 0.20·Re
 
 Winnability + AI-Resistance (0.25 each) deliberately outrank Demand (0.20). Each dimension is computed mechanically from *measured inputs* (head-volume bucket, KD + weak-SERP count, live AI-Overview fire-rate, CPC + buyer slice, build effort) — so any agent, on any run, gets the same verdict. The engine also evaluates the kill-gates and returns `DROP` + the single gate that fired (no launderable number) for any failure.
 
-A golden regression test is built in — it replays the real first-tool decision and **must** reproduce `Timesheet = 89`:
+The engine **fails closed** and is built for a fatal-downside decision: the cardinal error is the *false positive* — greenlighting a dud that burns runway ([ADR-0001](docs/adr/0001-ruin-avoidance-over-opportunity-maximization.md)). So it returns four statuses — **OK > VETO > REFUSE > DROP** — where **REFUSE** ("the evidence is ambiguous/contradictory — go verify, don't pick") is a first-class outcome, not an error. Required inputs are read by direct indexing (a missing key *raises*, never silently passes); AdSense-restricted verticals are dropped at Gate A; `thin_site_proof` is honored only when it carries evidence (ranking URL + DR + keyword); and `first_build_eligible` requires the high-weight dimensions to be tagged `real-measured` ([ADR-0009](docs/adr/0009-input-integrity-the-engine-refuses-to-trust-what-it-cannot-verify.md)).
+
+The built-in `--selftest` is a **mutable snapshot** (the `Timesheet = 89` number, which *fails loud* on recalibration so a human re-blesses it) **plus immutable invariants** — structural (QR drops at Gate A, gate-dropped tools carry no number, ranking is deterministic) and **golden-bad** ruin-avoidance cases (a restricted vertical, a gamed thin-proof wall, an AI-answerable lookup, and a contradictory input are all refused). A PASS means the engine is wired correctly **and refuses duds** — *not* that Timesheet is the universally "correct" pick ([ADR-0003](docs/adr/0003-golden-test-snapshot-plus-invariants.md)).
 
 ```bash
 python3 scripts/score.py --selftest
@@ -54,16 +56,16 @@ python3 scripts/score.py candidates.json
 ```
 
 ```
-=== pick-next-tool golden regression test ===
-   89.0  Timesheet / Time-Card Calculator   {demand:5, winnability:4, ai_resistance:5, revenue:4, build:4}
-   85.0  Email Signature Generator          {demand:4, winnability:4, ai_resistance:5, revenue:4, build:4}
-    —    Freelance Rate Calculator          DROP(Gate D — demand below the ~1,000/mo cluster floor)
+=== pick-next-tool selftest (snapshot + invariants + golden-bad) ===
+   89.0  Timesheet / Time-Card Calculator   {demand:5, winnability:4, ai_resistance:5, revenue:4, build:4}  [committable]
+   85.0  Email Signature Generator          {demand:4, winnability:4, ai_resistance:5, revenue:4, build:4}  [committable]
+    —    Freelance Rate Calculator          DROP(Gate D — cluster below the ~1000/mo demand floor)
     —    QR Code Generator                  DROP(Gate A — a browser/OS/Google native feature answers it inline)
-    —    TikTok Shop Fee Calculator         DROP(Gate D — demand below the ~1,000/mo cluster floor)
+    —    TikTok Shop Fee Calculator         DROP(Gate D — cluster below the ~1000/mo demand floor)
 PASS
 ```
 
-Note how QR has the highest demand and TikTok the easiest SERP — yet each fails a gate and is dropped *before* scoring. The all-rounder with no fatal weakness wins.
+Note how QR has the highest demand and TikTok the easiest SERP — yet each fails a gate and is dropped *before* scoring. The all-rounder with no fatal weakness wins. Every threshold is `v0` uncalibrated judgment in a tunable config block, revisited against an outcome ledger as real builds ship ([ADR-0002](docs/adr/0002-thresholds-are-uncalibrated-v0-config.md)). The full design rationale lives in [`docs/adr/`](docs/adr/).
 
 ## Install
 
@@ -107,6 +109,7 @@ scripts/
   autocomplete_fanout.py      cluster discovery from autocomplete + PAA
   volume_buckets.py           Google Ads / Keyword Planner volume bands
   dr_wall.py                  SERP DR-wall + weak-result analysis
+docs/adr/                     architecture decision records — the why behind every rule
 evals/evals.json              RED-GREEN evals targeting the three real divergence failure modes
 ```
 

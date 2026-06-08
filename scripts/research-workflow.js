@@ -37,23 +37,50 @@ if (!CANDIDATES.length) {
 }
 
 // The score.py input contract — every researcher and skeptic returns exactly these fields.
+// Fail-closed (ADR-0009): score.py reads each REQUIRED field by direct indexing — a missing key RAISES,
+// it does not silently pass. Measure them all; never omit one to "let it default".
 const CONTRACT = {
+  // --- Gate A policy (REQUIRED, ADR-0009) ---
+  adsense_restricted: { type: 'boolean', description: 'true if the vertical is AdSense-restricted (gambling/alcohol/adult/weapons/drugs/etc.) — a Gate-A hard DROP regardless of CPC' },
+  // --- Demand ---
   head_bucket: { type: 'string', enum: ['<100', '100-1K', '1K-10K', '10K-100K', '>=100K'] },
   cluster_kw_count: { type: 'integer' },
   cluster_monthly_volume: { type: 'integer' },
   incumbent_top3_visits: { type: 'integer' },
   distinct_variants: { type: 'integer' },
+  // --- Winnability ---
   kd_head: { type: 'integer' },
   weak_count: { type: 'integer' },
   native_feature: { type: 'boolean' },
   thin_site_proof: { type: 'boolean' },
+  // thin_site_proof is HONORED only when EVIDENCED (ADR-0009): supply the ranking URL + that page's DR + the keyword.
+  // A bare thin_site_proof=true with no evidence is ignored by score.py and flagged. Leave url='' / dr=null if no proof.
+  thin_site_proof_url: { type: 'string', description: 'the thin/low-DR page that already ranks (evidence); REQUIRED for thin_site_proof to count' },
+  thin_site_proof_dr: { type: ['integer', 'null'], description: "that ranking page's Domain Rating (evidence); REQUIRED for thin_site_proof to count" },
+  thin_site_proof_keyword: { type: 'string', description: 'the exact keyword that page ranks for (evidence)' },
+  dr_wall_evidenced: { type: 'boolean', description: 'true ONLY if you verified a DR-80+ wall from real SERP data — drives the Gate-B confident-kill citation (#11)' },
+  // --- AI-Resistance ---
   artifact_type: { type: 'string', enum: ['interactive_personalized', 'live_data_tool', 'info_tool', 'static_fact', 'single_fact'] },
-  aio_fire_pct: { type: 'integer' },
+  aio_fire_pct: { type: 'integer', description: '% of live SERP checks showing an AI Overview, projected to RANK-TIME (ADR-0006), 0-100' },
   onebox: { type: 'boolean' },
+  // --- Revenue ---
   cpc: { type: 'number' },
   has_recurring_affiliate: { type: 'boolean' },
   buyer_slice: { type: 'string', enum: ['strong', 'weak', 'none'] },
+  // --- Build ---
   build_type: { type: 'string', enum: ['pure_client_single_form', 'client_side_complex', 'one_stable_api_or_yearly_data', 'paid_or_monthly_stale', 'backend_or_live_feed'] },
+  // --- Evidence tiers (ADR-0009): per-dimension tier; commit (first_build_eligible) needs demand+winnability+ai_resistance at real-measured ---
+  evidence: {
+    type: 'object',
+    description: "{dimension: 'real-measured'|'triangulated'|'reasoned'} per dimension. Label honestly — only data you actually pulled live is real-measured; default is reasoned.",
+    properties: {
+      demand: { type: 'string', enum: ['real-measured', 'triangulated', 'reasoned'] },
+      winnability: { type: 'string', enum: ['real-measured', 'triangulated', 'reasoned'] },
+      ai_resistance: { type: 'string', enum: ['real-measured', 'triangulated', 'reasoned'] },
+      revenue: { type: 'string', enum: ['real-measured', 'triangulated', 'reasoned'] },
+      build: { type: 'string', enum: ['real-measured', 'triangulated', 'reasoned'] },
+    },
+  },
 }
 const CONTRACT_KEYS = Object.keys(CONTRACT)
 
@@ -61,13 +88,15 @@ const MEASURE_SCHEMA = {
   type: 'object',
   properties: Object.assign({}, CONTRACT, {
     tool: { type: 'string' },
-    gateA: { type: 'string', enum: ['PASS', 'FAIL', 'RECAST'] },
-    gateB: { type: 'string', enum: ['PASS', 'FAIL'] },
+    gateA: { type: 'string', enum: ['PASS', 'FAIL', 'RECAST'], description: 'FAIL covers BOTH adsense_restricted and native_feature — note which in evidence_sources' },
+    gateB: { type: 'string', enum: ['PASS', 'FAIL', 'REFUSE'], description: 'REFUSE = winnability==1 in the KD 21-25 noise band with no evidenced proof (ADR-0008)' },
     gateC: { type: 'string', enum: ['PASS', 'FAIL'] },
     gateD: { type: 'string', enum: ['PASS', 'FAIL'] },
     survives_gates: { type: 'boolean' },
     who_ranks_p1: { type: 'array', items: { type: 'string' } },
-    evidence: { type: 'array', items: { type: 'string' }, description: 'sources + dates; explicitly flag any field that is an estimate, not a measurement' },
+    // NOTE: per-dimension evidence TIERS live in the contract field `evidence` (an object).
+    // This array is the human-readable source/date trail — kept under a distinct key to avoid collision.
+    evidence_sources: { type: 'array', items: { type: 'string' }, description: 'sources + dates; explicitly flag any field that is an estimate, not a measurement' },
   }),
   required: ['tool', 'gateA', 'gateB', 'gateC', 'gateD', 'survives_gates'].concat(CONTRACT_KEYS),
 }
@@ -97,13 +126,14 @@ function researchPrompt(c) {
     `Skill scripts: ${SKILL_DIR}/scripts  ·  Procedure: read ${SKILL_DIR}/references/process.md (Stage 3) + free-tools.md as needed.`,
     DATA,
     '',
-    'Run the four KILL-GATES IN ORDER, note the first failure, and gather the REAL measured inputs score.py needs:',
-    '- Gate A (hard kill): a browser/OS/Google onebox feature answers it inline? output is a single static number / verbatim-chatbot text? AdSense-restricted vertical? If it can be RECAST as a stateful/multi-step/file-export tool, mark RECAST and continue.',
-    '- Gate B (winnability, decisive): WHO ranks page 1 of the head term? Any thin/low-DR/one-page site ranking the head OR long-tail (-> thin_site_proof=true)? Or a DR-80+ wall (-> native_feature stays false but weak_count low)? You buy the long-tail, never the bare head.',
-    '- Gate C (AI-Overview): check the LIVE SERP. Does an AIO answer it inline (-> onebox/high aio_fire_pct)? Is the intent an interactive do-it-here artifact?',
-    '- Gate D (real demand): measure the BROAD commercial term AND the persona-flavored term (the qualifier test — the flavor word can cut volume ~100x). Record head_bucket, cluster_kw_count, cluster_monthly_volume (summed across the cluster — Gate D is judged on this), distinct_variants, and top-3 incumbent monthly visits (Similarweb).',
+    'Run the four KILL-GATES IN ORDER, note the first firing cause, and gather the REAL measured inputs score.py needs:',
+    '- Gate A (hard kill): FIRST, is this an AdSense-restricted vertical (gambling/alcohol/adult/weapons/drugs/etc.)? -> set adsense_restricted=true (a hard DROP regardless of CPC). Then: a browser/OS/Google onebox feature answers it inline? output is a single static number / verbatim-chatbot text? (-> native_feature). If it can be RECAST as a stateful/multi-step/file-export tool, mark RECAST and continue.',
+    '- Gate B (winnability, decisive): WHO ranks page 1 of the head term? Any thin/low-DR/one-page site ranking the head OR long-tail? If so set thin_site_proof=true AND supply the EVIDENCE — thin_site_proof_url, thin_site_proof_dr, thin_site_proof_keyword — because score.py IGNORES a bare thin_site_proof with no evidence. If instead a verified DR-80+ wall dominates page 1, set dr_wall_evidenced=true (drives the confident-kill citation). You buy the long-tail, never the bare head.',
+    '- Gate C (AI-Overview): check the LIVE SERP. Does an AIO answer it inline (-> onebox / high aio_fire_pct)? Project aio_fire_pct to RANK-TIME (6-12mo out), not today (ADR-0006). Is the intent an interactive do-it-here artifact?',
+    '- Gate D (real demand): measure the BROAD commercial term AND the persona-flavored term (the qualifier test — the flavor word can cut volume ~100x). Record head_bucket, cluster_kw_count, cluster_monthly_volume (summed across the cluster — Gate D is judged on THIS measured volume only), distinct_variants, and top-3 incumbent monthly visits (Similarweb).',
     '',
-    'Return the score.py contract fields with your best MEASURED values, each gate PASS/FAIL/RECAST, survives_gates, who_ranks_p1, and evidence (sources + dates). For any field you could only estimate, SAY SO in evidence — never pass a guess off as a measurement.',
+    'Also set per-dimension evidence TIERS in the `evidence` object (demand/winnability/ai_resistance/revenue/build -> real-measured | triangulated | reasoned). Be honest: only data you pulled LIVE is real-measured; default to reasoned. Commit-eligibility requires demand+winnability+ai_resistance at real-measured.',
+    'Return the score.py contract fields with your best MEASURED values, each gate PASS/FAIL/REFUSE/RECAST, survives_gates, who_ranks_p1, and evidence_sources (sources + dates). For any field you could only estimate, SAY SO in evidence_sources and tier it triangulated/reasoned — never pass a guess off as a measurement.',
   ].filter(Boolean).join('\n')
 }
 
@@ -116,10 +146,12 @@ function skepticPrompt(measured, c) {
     '',
     'Independently re-check, with fresh data, the most decision-critical, most-hallucinated claims and adjust the contract fields DOWN where evidence is weaker:',
     '(1) REAL volume of the BROAD commercial term — re-pull it. The qualifier often guts volume 10-100x (e.g. "freelance rate calculator" <100/mo vs "invoice generator" >10k/mo). If the real broad cluster is < ~1,000/mo, survived=false.',
-    '(2) AI-OVERVIEW on the head term — verify on the LIVE SERP yourself; never infer from intent. A full-answer AIO collapses AI-resistance.',
-    '(3) BUYER SLICE for revenue — who actually purchases? If most users are non-buyers (e.g. employees totalling their own hours), set buyer_slice="weak"/"none" (display-first, affiliate is upside only).',
+    '(2) AI-OVERVIEW on the head term — verify on the LIVE SERP yourself; never infer from intent. A full-answer AIO collapses AI-resistance. Project aio_fire_pct to rank-time, not today.',
+    '(3) BUYER SLICE for revenue — who actually purchases? If most users are non-buyers (e.g. employees totalling their own hours), set buyer_slice="weak"/"none" (display-first, affiliate is upside only). NB: the affiliate +1 only applies at buyer_slice="strong".',
+    '(4) RESTRICTED VERTICAL — confirm adsense_restricted: a high CPC in gambling/CBD/adult/etc. is a $0 monetizable Gate-A DROP, not Revenue=5. Set adsense_restricted=true if so.',
+    '(5) THIN-SITE PROOF — if thin_site_proof=true, verify the EVIDENCE is real (thin_site_proof_url + _dr + _keyword); a thin site allegedly beating a DR-90+ head is suspect. Strip thin_site_proof to false (and clear the evidence) if you cannot confirm the ranking page. Conversely confirm dr_wall_evidenced only on a real DR-80+ wall.',
     'Also re-check for any false tiebreaker / stale premise (a domain "already owned", a prior commitment) — these have been wrong before; do not let one carry the decision.',
-    'Return the CORRECTED contract fields, a corrections list, demand_confidence (keep <= medium unless you pulled real keyword-tool data), and survived.',
+    'Return the CORRECTED contract fields (including adsense_restricted, the thin_site_proof_* evidence, dr_wall_evidenced, and the per-dimension `evidence` tiers — downgrade any tier you could not independently confirm to real-measured), a corrections list, demand_confidence (keep <= medium unless you pulled real keyword-tool data), and survived.',
   ].join('\n')
 }
 

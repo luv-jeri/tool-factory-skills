@@ -497,5 +497,35 @@ def _main(argv):
     return 0
 
 
+def _load_dotenv():
+    """Populate os.environ from the nearest .env (walking up from CWD, then this file's
+    directory), WITHOUT overriding vars already set in the real environment. Stdlib only —
+    no python-dotenv dependency. Lets `--data=auto` read keys from a project .env per
+    SETUP.md Option A; real exported env vars still win."""
+    for start in (os.getcwd(), os.path.dirname(os.path.abspath(__file__))):
+        d = start
+        while True:
+            path = os.path.join(d, ".env")
+            if os.path.isfile(path):
+                try:
+                    with open(path) as fh:
+                        for raw in fh:
+                            line = raw.strip()
+                            if not line or line.startswith("#") or "=" not in line:
+                                continue
+                            key, _, val = line.partition("=")
+                            key, val = key.strip(), val.strip().strip('"').strip("'")
+                            if key and key not in os.environ:
+                                os.environ[key] = val
+                except OSError:
+                    pass
+                return
+            parent = os.path.dirname(d)
+            if parent == d:
+                break
+            d = parent
+
+
 if __name__ == "__main__":
+    _load_dotenv()
     sys.exit(_main(sys.argv))

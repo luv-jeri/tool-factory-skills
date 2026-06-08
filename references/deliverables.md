@@ -2,6 +2,8 @@
 
 Emit ALL SIX of these at Stage 8. Together they make the decision reproducible and let the build start the same day. File the markdown + xlsx artifacts in `micro-tool-factory/strategy/` with the **next sequence number** (e.g. `09-NEXT-TOOL-DECISION.md`, `09-NEXT-TOOL-SCORECARD.xlsx`, `09-<tool>-BUILD-BRIEF.md`). Then run the **memory log** step (artifact 6's tail) so the next run of this skill does not re-pick what was just chosen.
 
+The decision brief carries two distinctions that ADR-0004/0007 make mandatory: (1) it names **both the opener** (the build NOW, chosen for fastest-defensible-time-to-traffic) **and the highest-ceiling tool** when they differ; and (2) it includes a **short 3–4-step ordered roadmap** (brief §7) — the next build plus its position in a sequence that compounds authority on the link-spine, not a lone pick.
+
 **The gold-standard model to mirror** for voice, density, and the "honest correction" habit is `micro-tool-factory/strategy/07-FIRST-TOOL-DECISION.md` (the first-tool decision: timecard calculator). Match its quality — cited evidence inline, a §0 supersede note when you overturn a prior pick, a live keyword-verification section that *closes its own caveat*, and an explicit "this diverges from the inherited ranking" paragraph. Do not write thinner than that.
 
 Each template below is a fenced block a human (or you) fills in. Replace every `<...>`. Keep the headings; they are the contract the next agent reads.
@@ -28,8 +30,9 @@ The flagship artifact. Mirrors `07-FIRST-TOOL-DECISION.md` section-for-section. 
 
 ## 1. TL;DR — the verdict
 
-- **Hub: <hub>.** <one-line why it passed the hub gate: one persona, ≥4–6 tools, low YMYL/AIO pressure, embed-friendly, link-spine compounds.>
-- **Next tool: `<Tool>`.** The best *balanced* pick — <one line: proven durable demand + a proven thin-site long-tail path + AI-resistance + a real revenue floor + easy static build>. The only candidate with **no dimension scored 1**.
+- **Hub: <hub>.** <one-line why it passed the hub pre-flight gate-drill: one persona, ≥3 tools drilled-winnable, low YMYL/AIO pressure, embed-friendly, link-spine compounds.>
+- **Opener (build NOW): `<Tool>`.** Chosen for **fastest-defensible-time-to-traffic / survival** (ADR-0004), not peak Opportunity — <one line: proven durable demand + an EVIDENCED thin-site long-tail path + AI-resistance + a real revenue floor + easy static build>. The only candidate with **no dimension scored 1** and `first_build_eligible`.
+- **Highest-ceiling tool (if different from the opener): `<Tool>`.** <the bigger-Opportunity tool that is slower/competition-gated, so it becomes build #2 once revenue de-risks the wait. State this explicitly when it differs from the opener — the "first build" and "highest-opportunity tool" can legitimately diverge, ADR-0004.>
 - **Runner-ups, in order:** **#2 <tool>** (<one-line why>), **#3 <tool>** (<one-line why — e.g. highest-revenue but competition-gated, so a fast-follow>).
 - **One correction to the inherited thesis:** <the honest correction, e.g. build display-ads-first; affiliate is an upside kicker on the buyer slice only — most of the audience won't purchase>.
 - **Avoid as the next build:** <trap tools + the ONE dimension each fails: e.g. X (high volume, unwinnable head); Y (winnable + trivial but near-zero revenue); Z (AI-vulnerable — chatbots already emit the output)>.
@@ -83,12 +86,14 @@ Scores 1–5 per dimension on the deterministic anchors, weighted into a 0–100
 - **<trap tool> (<score>) — the <volume|revenue|winnability> trap.** <why it fails its one dimension; revisit-later condition>.
 - <…one bullet per remaining gated candidate…>
 
-## 7. Recommended sequence (this cluster, in build order)
+## 7. Ordered roadmap — the next build PLUS its position in a 3–4-step sequence (ADR-0007)
 
-1. **<winner>** — <traffic/proof anchor; the long-tail variant pages to spin>.
-2. **<tool>** — <role in the cluster>.
-3. **<tool>** — <role>.
-4. **<tool>** — <round-out spoke for internal-link gravity>.
+The deliverable is **not a lone pick** — tools in a hub share a link-spine, so build *order* compounds topical authority. State the 3–4-step roadmap, with the opener foregrounded. It is a re-derivable sketch (data changes every run), never a frozen plan; only step 1 (the now-pick) is decided with full rigor.
+
+1. **<opener / winner>** — the build NOW, chosen for fastest-defensible-time-to-traffic (ADR-0004); the long-tail variant pages to spin. <If the highest-ceiling tool differs, say so: "opener for speed; #<n> is the higher-ceiling build once revenue de-risks the wait.">
+2. **<tool>** — the same-hub fallback (Stage 7) reframed as roadmap position #2; <role in the cluster>.
+3. **<tool>** — <role; climbs the opportunity ceiling once revenue de-risks the wait>.
+4. **<tool>** — <round-out spoke for internal-link gravity / preserves fallback depth>.
 
 Internal-link spine: <axis A: tool → tool → tool> on the "<what the user is trying to do>" axis; <axis B spokes>. Every page links to ≥2 siblings.
 

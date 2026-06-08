@@ -48,27 +48,38 @@ digraph when {
 4. THE FIRST BUILD HAS NO DIMENSION SCORED 1.
    Any single 1 is an automatic VETO regardless of total. Pick the
    all-rounder (no fatal weakness), never the highest-on-one-axis trap.
+
+5. THE ENGINE FAILS CLOSED, AND "REFUSE" IS A LEGAL ANSWER.
+   Every required input is read by direct indexing — a missing/mistyped key
+   RAISES, never silently passes (ADR-0009). An AdSense-restricted vertical
+   (gambling/alcohol/adult/drugs/weapons) is the FIRST Gate-A DROP, no matter
+   how high its CPC. Evidence tiers are enforced IN CODE: a tool is
+   `first_build_eligible` only when Demand+Winnability+AI-Resistance are all
+   `real-measured`. When the data is ambiguous or contradictory, the honest
+   output is REFUSE → go verify — not an optimistic OK or a confident DROP.
 ```
 
-**Violating the letter of these laws is violating the spirit.** "The score is 89 so ship it" without the veto check, the evidence-tier check, and the kill pass is a violation.
+**Violating the letter of these laws is violating the spirit.** "The score is 89 so ship it" without the veto check, the evidence-tier check, and the kill pass is a violation. The full rationale lives in `docs/adr/` — read it for the why behind every rule.
 
 ## The funnel
 
 ```dot
 digraph funnel {
-  s0 [shape=box label="0 Reconcile prior research → one canonical baseline"];
-  s1 [shape=box label="1 Hub-selection gate (one persona, ≥4–6 tools, low YMYL, link spine)"];
+  s0 [shape=box label="0 Reconcile prior research → one canonical baseline (+ capture runway_months)"];
+  s1 [shape=box label="1 Hub pre-flight gate-drill (Gates A–D on 2–3 tools; depth ≥3 verified-winnable)"];
   s2 [shape=box label="2 Source 10–12 deduped in-hub candidates"];
   ga [shape=diamond label="3 Gates A→B→C→D pass IN ORDER?"];
   drop [shape=octagon color=red label="DROP"];
-  s4 [shape=box label="4 Deterministic weighted score (tag evidence tier)"];
+  refuse [shape=octagon label="REFUSE (ambiguous → go verify)"];
+  s4 [shape=box label="4 Deterministic weighted score (rank on triangulated; commit gated on real-measured)"];
   s5 [shape=diamond label="5 Real keyword volume ≥ ~5k/mo cluster?"];
   s6 [shape=diamond label="6 Adversarial kill: load-bearing claims survive?"];
   fb [shape=box label="Promote same-hub runner-up"];
   s7 [shape=box label="7 Confidence + fallback + monitor-list"];
-  s8 [shape=doublecircle label="8 Deliverables + memory log"];
+  s8 [shape=doublecircle label="8 Next build + 3–4-step ordered roadmap + memory log"];
   s0 -> s1 -> s2 -> ga;
-  ga -> drop [label="any fail"];
+  ga -> drop [label="gate fails"];
+  ga -> refuse [label="ambiguous/contradictory"];
   ga -> s4 [label="all pass"];
   s4 -> s5;
   s5 -> fb [label="no / contradicts score"];
@@ -104,15 +115,15 @@ The data mode changes only HOW inputs are measured — never the gates, the scor
 Announce: **"Using pick-next-tool to select the next tool for [hub]."** Then create a TodoWrite item for EACH stage and complete them in order:
 
 ```
-0. Reconcile prior research → canonical baseline (resolve contradictions; confirm uncertain premises with the user)
-1. Hub-selection gate → choose the opening hub
+0. Reconcile prior research → canonical baseline (resolve contradictions; confirm uncertain premises with the user; CAPTURE runway_months as an input — ADR-0004)
+1. Hub pre-flight gate-drill → run Gates A–D quickly on 2–3 representative tools; require depth ≥3 verified-winnable tools; prefer the deeper hub; record the hub choice as an ADR (ADR-0005)
 2. Source a deduped 10–12 candidate shortlist inside the hub   [--checkpoints: confirm shortlist]
-3. Kill-gates A→B→C→D in order (drop failures)
-4. Deterministic weighted score on the standard model (evidence-tier every score)   [--checkpoints: confirm finalists]
+3. Kill-gates A→B→C→D in order (DROP failures; REFUSE on ambiguous/contradictory inputs — both are valid outcomes, ADR-0001)
+4. Deterministic weighted score on the standard model (evidence-tier every score; rank on triangulated, commit only on real-measured — ADR-0009)   [--checkpoints: confirm finalists]
 5. Real keyword-volume verification (BLOCKING — browser-driven Ahrefs/free toolchain)
 6. Adversarial "kill the winner" (separate skeptic; re-check volume + AIO + buyer-slice revenue)   [--checkpoints: confirm winner]
 7. Confidence + named same-hub fallback + monitor-list
-8. Emit the 6 deliverables and log the decision to memory (supersede stale drafts in writing)
+8. Emit the deliverables — the next build PLUS a short 3–4-step ordered roadmap (ADR-0007) — and log the decision to memory (supersede stale drafts in writing)
 ```
 
 Heavy detail is in the reference files — read the one for the stage you are on:
@@ -122,14 +133,15 @@ Heavy detail is in the reference files — read the one for the stage you are on
 - **`references/free-tools.md`** — the verified free + open-source toolchain, the recommended layered stack, and the exact operational steps to pull real keyword data (browser-driven).
 - **`references/deliverables.md`** — copy-paste templates for the 6 output artifacts.
 - **`references/live-recheck.md`** — the runtime re-verification list: every stale quota/threshold/stat (SerpApi free cap, ad-network thresholds, AIO prevalence) with how to re-check it. Treat all free volume as ORDINAL; re-verify anything load-bearing before naming a winner.
-- **`scripts/score.py`** — the deterministic scoring engine. Run it on the measured inputs (`python3 scripts/score.py candidates.json`); never hand-score. `--selftest` is the golden regression test.
+- **`scripts/score.py`** — the deterministic scoring engine. Run it on the measured inputs (`python3 scripts/score.py candidates.json`); never hand-score. `--selftest` is a **snapshot (mutable, fails loud on recalibration) + immutable structural & golden-bad invariants** (ADR-0003) — PASS means the engine is wired right and refuses duds, not that Timesheet is the right pick.
+- **`docs/adr/`** — the nine ADRs behind every rule (ruin-avoidance, uncalibrated config, selftest shape, time-to-rank, hub rigor, future-SERP, roadmap deliverable, soft bands, input integrity). Read these for the *why*.
 - **`SETUP.md`** — one-time setup for `--data=auto` ONLY: how to get the free API keys (Google Ads, Bing Webmaster, OpenPageRank, SerpApi). `--data=manual`/`hybrid` need none of it.
 - **`scripts/research-workflow.js`** — the parameterized Workflow the skill runs each invocation — one researcher + one adversarial skeptic per candidate, returning `score.py`-ready MEASURED inputs (not subjective scores). Run it with the Workflow tool, passing `{hub, dataMode, skillDir, candidates}`; do NOT read it into context to "study" it — execute it. (In auto/hybrid mode it calls `autocomplete_fanout.py`, `volume_buckets.py`, `dr_wall.py`.)
 
 ## Quick reference — the scoring model
 
 `Opportunity = (0.20·Demand + 0.25·Winnability + 0.25·AI-Resistance + 0.20·Revenue + 0.10·Build) × 20` → 0–100.
-Winnability + AI-Resistance outrank Demand on purpose. **Do not hand-assign the 1–5s — run `scripts/score.py` on the measured inputs the research workflow returns.** It computes every dimension deterministically (Demand = head-volume bucket + a deep-cluster/real-traffic bonus; Winnability = thin-site-proof, else KD+weakCount; AI-Resistance = live-AIO check; Revenue = CPC + buyer-slice-gated affiliate; Build = effort), so the same inputs always yield the same winner. Tag each score's evidence tier (real-measured / triangulated / reasoned); gate-dropped candidates get NO score; any dimension = 1 vetoes a first build. `python3 scripts/score.py --selftest` is the golden regression test — it must reproduce Timesheet = 89.
+Winnability + AI-Resistance outrank Demand on purpose. **Do not hand-assign the 1–5s — run `scripts/score.py` on the measured inputs the research workflow returns.** It computes every dimension deterministically (Demand = head-volume bucket + a deep-cluster/real-traffic bonus on the lower-bound estimate; Winnability = EVIDENCED thin-site-proof, else KD+weakCount; AI-Resistance = live-AIO check projected to rank-time; Revenue = CPC + strong-buyer-slice-gated affiliate; Build = effort), so the same inputs always yield the same winner. Tag each score's evidence tier (real-measured / triangulated / reasoned); gate-dropped/refused candidates get NO Opportunity number; any dimension = 1 vetoes a first build. `python3 scripts/score.py --selftest` is the regression test: a **mutable snapshot** (currently Timesheet = 89; it **fails loud on recalibration** so a human re-blesses the new number — ADR-0003) **plus immutable structural & golden-bad invariants**. "selftest PASS" means the engine is **wired right and refuses duds** — NOT that Timesheet is the correct pick.
 
 ## Common rationalizations — STOP
 
@@ -139,7 +151,11 @@ Winnability + AI-Resistance outrank Demand on purpose. **Do not hand-assign the 
 | "Search volume looks high from the SERP density." | SERP density is a `reasoned` estimate. Demand is not a fact until Stage 5 real data. The qualifier kills the volume — measure the broad commercial term. |
 | "Head term is competitive, so kill it." | You buy the long-tail, never the head. A thin/low-DR site already ranking the long-tail is a PASS, not a fail. |
 | "It scored 89, so it's the pick." | Check the veto (any 1?) and the evidence tier of each score. A high score on guessed inputs is provisional until verified. |
-| "CPC is high, so Revenue = 5." | Discount affiliate to the BUYER slice. If most of the audience won't purchase (e.g. employees totalling their own hours), it's display-first, not affiliate-rich. |
+| "CPC is high, so Revenue = 5." | Discount affiliate to the BUYER slice. CPC alone tops out at Revenue 4 — the +1 to 5 needs a recurring affiliate AND `buyer_slice == "strong"`. If most of the audience won't purchase (e.g. employees totalling their own hours), it's display-first, not affiliate-rich. |
+| "It's a high-CPC niche so Revenue = 5." | Check `adsense_restricted` FIRST. Gambling/CBD/adult = $0 monetizable → Gate-A DROP no matter the CPC. A high bid on an unmonetizable vertical is worth nothing. |
+| "A thin site ranks it, so winnability is fine." | Only if EVIDENCED — `thin_site_proof_url` + `thin_site_proof_dr` + `thin_site_proof_keyword`. A bare asserted bool is ignored and flagged. And it caps at 3 over a DR-90+ head (`kd_head > 80`): a thin site beating a DR-90 wall is suspect, not proof. |
+| "The data's ambiguous but I'll pick anyway." | No — that's a REFUSE. A `winnability==1` in the KD 21–25 noise band, or a head bucket implying more volume than the whole cluster, returns REFUSE → go verify. Picking on a coin-flip is the dud-greenlight failure (ADR-0001/0008). |
+| "It'll rank eventually." | Time-to-traffic vs runway (ADR-0004). A winnable-but-slow tool that matures past the runway is the fatal outcome, not opportunity cost. If `est_time_to_traffic_months > runway_months` it's a fast-follow, not the opener. |
 | "I'll skip the kill pass, the data looks solid." | The kill pass is mandatory and uses a SEPARATE skeptic. It exists to break "solid"-looking picks before you waste build effort. |
 | "Both modes feel like overkill, I'll just decide." | Deciding without the funnel is exactly what produced three different answers. Run it. |
 | "I'll just assign the 1–5 scores myself; I can see they're about right." | No — hand-assigned scores are the exact variance that gave three agents three answers. Feed the measured inputs to `scripts/score.py`; it is the source of truth, and `--selftest` proves it reproduces the real decision. |

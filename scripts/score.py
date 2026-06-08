@@ -88,6 +88,7 @@ Usage:
 """
 from __future__ import annotations
 import json
+import math
 import sys
 
 # =========================================================================== #
@@ -112,6 +113,7 @@ THRESHOLDS = {
     "kd_easy": 5, "kd_good": 10, "kd_contested": 15, "kd_hard": 20,
     "kd_autokill_margin": 26,           # ADR-0008: winnability==1 is a CONFIDENT kill only at KD>=this w/ weak<=1
     "kd_thin_proof_cap": 80,            # #3: cap thin-site winnability floor to 3 when kd_head > this
+    "thin_proof_dr_ceiling": 40,        # a "thin-site proof" page above this DR is NOT thin -> not proof (verify-critical)
     "weak_strong": 4, "weak_mod": 3,
     # AI-Resistance
     "aio_info_low": 40, "aio_dead": 85,
@@ -156,6 +158,20 @@ def validate(c):
     for dim, tier in ev.items():
         if tier not in EVIDENCE_TIERS:
             raise ContractError(f"{c['tool']}: bad evidence tier {tier!r} for {dim}")
+    # Fail closed on non-finite / wrong-type numerics (ADR-0009): NaN/Inf would slip past every
+    # `<` gate comparison (NaN<x is always False; Inf clears every floor) and silently greenlight.
+    for f in ("cluster_kw_count", "cluster_monthly_volume", "incumbent_top3_visits",
+              "distinct_variants", "kd_head", "weak_count", "aio_fire_pct", "cpc"):
+        v = c[f]
+        if isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v):
+            raise ContractError(f"{c['tool']}: {f} must be a finite number, got {v!r}")
+    for f in ("thin_site_proof_dr", "est_time_to_traffic_months", "runway_months"):
+        v = c.get(f)
+        if v is not None and (isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v)):
+            raise ContractError(f"{c['tool']}: {f} must be a finite number or omitted, got {v!r}")
+    dr = c.get("thin_site_proof_dr")
+    if dr is not None and not (0 <= dr <= 100):
+        raise ContractError(f"{c['tool']}: thin_site_proof_dr must be 0..100, got {dr}")
 
 
 # --------------------------------------------------------------------------- #
@@ -257,8 +273,17 @@ def opportunity(scores):
 # Helpers for gate confidence / evidence / flags.
 # --------------------------------------------------------------------------- #
 def _thin_proof_evidenced(c):
-    return bool(c["thin_site_proof"]) and bool(c.get("thin_site_proof_url")) and \
-        c.get("thin_site_proof_dr") is not None
+    """Thin-site proof is honored only when it carries a genuinely THIN (low-DR) ranking page.
+    A proof page whose DR is above the thinness ceiling is not a thin site — it is just a strong
+    incumbent — so it is NOT proof a new thin site can win (the whole point of the rule). validate()
+    has already range-checked thin_site_proof_dr to a finite 0..100, so the only question here is
+    'present, and actually thin?' (closes the verify-pass critical where a DR-91 proof greenlit a wall)."""
+    if not c["thin_site_proof"] or not c.get("thin_site_proof_url"):
+        return False
+    dr = c.get("thin_site_proof_dr")
+    if dr is None:
+        return False
+    return dr <= THRESHOLDS["thin_proof_dr_ceiling"]
 
 
 def _winnability_confident_kill(c, win_score):
@@ -316,9 +341,10 @@ def evaluate(c, scores):
             return "DROP", (f"Gate B — unwinnable: head KD {c['kd_head']} (>= {THRESHOLDS['kd_autokill_margin']}) "
                             "with <=1 weak result and no thin-site proof"), []
         return "REFUSE", None, [
-            f"winnability ambiguous: head KD {c['kd_head']} sits in the noise band "
-            f"({THRESHOLDS['kd_contested']}-{THRESHOLDS['kd_autokill_margin'] - 1}) with weak_count "
-            f"{c['weak_count']} and no thin-site proof — pull more SERP evidence before deciding"]
+            f"winnability ambiguous: head KD {c['kd_head']} with weak_count {c['weak_count']} is past "
+            f"the kill line but lacks auto-kill margin (need KD >= {THRESHOLDS['kd_autokill_margin']} "
+            "with <=1 weak result, or an evidenced DR wall) and has no evidenced thin-site proof — "
+            "pull more SERP/thin-site evidence before deciding"]
     # GATE C -- AI Overview / onebox / dead-on-arrival AI.
     if c["onebox"]:
         return "DROP", "Gate C — a live calculator/conversion/definition onebox answers it inline", []
@@ -499,6 +525,16 @@ GOLDEN_BAD = [
               "artifact_type": "interactive_personalized", "aio_fire_pct": 5, "onebox": False,
               "cpc": 3.0, "has_recurring_affiliate": False, "buyer_slice": "weak",
               "build_type": "pure_client_single_form"}},
+    {"name": "evidenced thin-proof that is NOT thin (DR-91 page over a KD-82 head)", "expect": ("DROP", "Gate B"),
+     "cand": {"tool": "Strong-Site-Mislabeled-As-Thin", "adsense_restricted": False,
+              "head_bucket": "1K-10K", "cluster_kw_count": 150, "cluster_monthly_volume": 8000,
+              "incumbent_top3_visits": 3_000_000, "distinct_variants": 12,
+              "kd_head": 82, "weak_count": 0, "native_feature": False, "thin_site_proof": True,
+              "thin_site_proof_url": "bigbrand.com/tool", "thin_site_proof_dr": 91,
+              "thin_site_proof_keyword": "the keyword",
+              "artifact_type": "interactive_personalized", "aio_fire_pct": 5, "onebox": False,
+              "cpc": 3.0, "has_recurring_affiliate": False, "buyer_slice": "weak",
+              "build_type": "pure_client_single_form"}},
     {"name": "KD noise band -> REFUSE, not auto-kill", "expect": ("REFUSE", None),
      "cand": {"tool": "Mid-Difficulty Tool", "adsense_restricted": False,
               "head_bucket": "1K-10K", "cluster_kw_count": 150, "cluster_monthly_volume": 8000,
@@ -579,6 +615,22 @@ def _selftest():
         failures.append("[fail-closed] missing cluster_monthly_volume did NOT raise (silent pass)")
     except ContractError:
         pass
+    # thin_site_proof_dr is range-validated, and a non-thin DR is not honored as proof.
+    for badval, why in ((-5, "negative DR"), (150, "DR>100")):
+        b = dict(GOLDEN[0]); b["thin_site_proof_dr"] = badval
+        try:
+            score_candidate(b)
+            failures.append(f"[fail-closed] thin_site_proof_dr={badval} ({why}) did NOT raise")
+        except ContractError:
+            pass
+    # NaN/Inf volume must not bypass the gates (NaN<x and Inf<floor would silently pass).
+    for badval in (float("nan"), float("inf")):
+        b = dict(GOLDEN[0]); b["cluster_monthly_volume"] = badval
+        try:
+            score_candidate(b)
+            failures.append(f"[fail-closed] cluster_monthly_volume={badval} did NOT raise")
+        except ContractError:
+            pass
 
     # --- Print report ---
     print("=== pick-next-tool selftest (snapshot + invariants + golden-bad) ===")

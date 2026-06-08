@@ -56,7 +56,7 @@ const CONTRACT = {
   // thin_site_proof is HONORED only when EVIDENCED (ADR-0009): supply the ranking URL + that page's DR + the keyword.
   // A bare thin_site_proof=true with no evidence is ignored by score.py and flagged. Leave url='' / dr=null if no proof.
   thin_site_proof_url: { type: 'string', description: 'the thin/low-DR page that already ranks (evidence); REQUIRED for thin_site_proof to count' },
-  thin_site_proof_dr: { type: ['integer', 'null'], description: "that ranking page's Domain Rating (evidence); REQUIRED for thin_site_proof to count" },
+  thin_site_proof_dr: { type: ['integer', 'null'], description: "that ranking page's ACTUAL Domain Rating (evidence), range 0-100. Must be <= ~40 to count: a DR above that is a strong incumbent, NOT a thin site, and will NOT be honored as proof (it falls back to the KD ladder)." },
   thin_site_proof_keyword: { type: 'string', description: 'the exact keyword that page ranks for (evidence)' },
   dr_wall_evidenced: { type: 'boolean', description: 'true ONLY if you verified a DR-80+ wall from real SERP data — drives the Gate-B confident-kill citation (#11)' },
   // --- AI-Resistance ---

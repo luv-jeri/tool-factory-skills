@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Local credentials for --data=auto (NEVER commit these)
+.env
+.env.*
+*.credentials.json
+google-ads.yaml
+
+# Scratch / runtime artifacts
+candidates.json
+*.local.json
+.DS_Store

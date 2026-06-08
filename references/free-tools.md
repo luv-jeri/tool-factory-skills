@@ -60,7 +60,7 @@ Keep AUTO's automated core, add human/browser cross-checks.
 | 2 | **Google Ads API — GenerateKeywordIdeas** | Free no-spend Expert-Mode account + dev token. Real 12-month `avg_monthly_searches` buckets for every variant — the qualifier-kills-volume A/B in one request. |
 | 3 | **Bing Webmaster GetKeywordStats API** | Free key. EXACT integer volumes to break ties inside a Google bucket. |
 | 4 | **OpenPageRank API** | Free key, ~4.3M domains/day, 100 domains/request. Automatable DR proxy for the page-1 authority distribution (the DR-wall gate). |
-| 5 | **SerpApi free tier** (~100–250/mo — RE-VERIFY) | Structured page-1 organic domains + `ai_overview` block. Reserve strictly for the finalist shortlist. |
+| 5 | **SerpApi free tier** (250/mo — confirmed 2026-06 via `serp_aio.py`) | Structured page-1 organic domains + `ai_overview` block, via `scripts/serp_aio.py`. Reserve strictly for the finalist shortlist. |
 
 > Treat ALL free volume as relative/ordinal (bucket thresholds), never precision.
 
@@ -153,7 +153,7 @@ Procedure:
 | **Detailed SEO Extension** | On-page title/H1-H6/schema/word-count/indexability of any result | Free, no cap | manual-only | Confirm "thin page-1" |
 | **MozBar** | DA/PA overlay on SERP | Free w/ account, 10 Link Explorer q/mo | manual-only | Manual DA-wall glance |
 | **Moz Link Explorer** | DA/PA + page-level backlinks (ghost-ranking) | 10 q/mo (web) / ~25 (API) | partial | Page-level ghost-ranking on best candidate |
-| **SerpApi** | SERP JSON: organic domains + `ai_overview` | ~100/mo (RE-VERIFY) | yes-api | Automatable SERP+AIO on finalists |
+| **SerpApi** | SERP JSON: organic domains + `ai_overview` (via `scripts/serp_aio.py`) | 250/mo (confirmed 2026-06) | yes-api | Automatable SERP+AIO on finalists |
 | **DuckDuckGo (DDGS) / Bing HTML** | De-personalized SERP, plain-HTTP, unlimited | Free OSS | yes-browser | **Free unlimited first-pass triage** |
 | **SEMScoop / SEO Review Tools / Mangools** | KD + per-result SERP authority | 2–5/day free | partial | Manual triangulation on finalists |
 | **Common Crawl Web Graph** | Raw host link graph (upstream of OpenPageRank) | Free on AWS, heavy | yes-api | Skip live; fallback only |
@@ -211,9 +211,12 @@ Method:
    answers the user's need on its own.
 3. **Check 2–3 times** — AIO presence is volatile and varies by session, so a
    single render is not conclusive.
-4. AUTO/HYBRID layer: read SerpApi's `ai_overview` field on finalists only
-   (lazy ones surface via `page_token`). Do NOT hard-code DOM selectors
-   (`.Kevs9`, `div.Y3BBE`) — Google changes them frequently; verify live.
+4. AUTO/HYBRID layer: run `python3 scripts/serp_aio.py "<head term>"` — it reads
+   SerpApi's `ai_overview` field (presence → `aio_fire_pct`), the `answer_box`/onebox
+   (the Gate-C inline kill → `onebox`), and the ordered page-1 domains (feed those
+   into `dr_wall.py`). Reserve for finalist head terms (~250 searches/mo). Lazy AIOs
+   surface via `page_token`; presence of the `ai_overview` key is enough for the gate.
+   Do NOT hard-code DOM selectors — Google changes them frequently; verify live.
 5. **AI-Overview kill (instant fail):** the SERP is dominated by an AIO that
    fully answers the need AND there is no persistent tool widget worth clicking
    through for (kills the AdSense click). A stateful interactive tool

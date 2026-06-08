@@ -109,6 +109,7 @@ scripts/
   autocomplete_fanout.py      cluster discovery from autocomplete + PAA
   volume_buckets.py           Google Ads / Keyword Planner volume bands
   dr_wall.py                  SERP DR-wall + weak-result analysis
+  serp_aio.py                 SerpApi live SERP — AI-Overview / onebox / page-1 domains (--data=auto)
 docs/adr/                     architecture decision records — the why behind every rule
 evals/evals.json              RED-GREEN evals targeting the three real divergence failure modes
 ```

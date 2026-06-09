@@ -70,7 +70,7 @@ def validate(rec: dict) -> None:
     _require_number(rec, "dr", 0, 100)
     _require_number(rec, "referring_domains", 0)
     _require_number(rec, "serp_rank", 1, allow_none=True)
-    _require_number(rec, "serp_features_owned", 0)
+    _require_number(rec, "serp_features_owned", 0, allow_none=True)
     _require_number(rec, "word_count", 0)
     _require_number(rec, "heading_count", 0)
     _require_number(rec, "paa_coverage", 0.0, 1.0)
@@ -78,11 +78,11 @@ def validate(rec: dict) -> None:
     _require_number(rec, "lcp_ms", 0)
     _require_number(rec, "cls", 0)
     _require_number(rec, "inp_ms", 0)
-    _require_number(rec, "a11y_score", 0, 100)
-    _require_number(rec, "clicks_to_result", 1)
+    _require_number(rec, "a11y_score", 0, 100, allow_none=True)
+    _require_number(rec, "clicks_to_result", 0)
     _require_number(rec, "trust_signals", 0)
-    if not isinstance(rec["ai_overview_cited"], bool):
-        raise ContractError("ai_overview_cited must be bool")
+    if rec["ai_overview_cited"] is not None and not isinstance(rec["ai_overview_cited"], bool):
+        raise ContractError("ai_overview_cited must be bool or None")
     if not isinstance(rec["schema_types"], list):
         raise ContractError("schema_types must be a list")
 
@@ -100,7 +100,9 @@ def _serp(rec):
         base = 1
     else:
         base = 5 if rank == 1 else 4 if rank <= 3 else 3 if rank <= 6 else 2 if rank <= 10 else 1
-    bonus = 1 if (rec["ai_overview_cited"] or rec["serp_features_owned"] >= 2) else 0
+    aio = rec["ai_overview_cited"] is True
+    feats = rec["serp_features_owned"] or 0
+    bonus = 1 if (aio or feats >= 2) else 0
     return _clamp(base + bonus, 1, 5)
 
 
@@ -125,10 +127,12 @@ def _ux_perf_a11y(rec):
     cls_sc = 5 if cls <= 0.1 else 3 if cls <= 0.25 else 1
     inp_sc = 5 if inp <= 200 else 3 if inp <= 500 else 1
     perf_sc = _r((lcp_sc + cls_sc + inp_sc) / 3)
-    a11y_sc = _clamp(_r(1 + 4 * (rec["a11y_score"] / 100)), 1, 5)
     c = rec["clicks_to_result"]
     ux_sc = 5 if c <= 2 else 4 if c <= 4 else 3 if c <= 6 else 2 if c <= 8 else 1
-    return _clamp(_r((perf_sc + a11y_sc + ux_sc) / 3), 1, 5)
+    parts = [perf_sc, ux_sc]
+    if rec["a11y_score"] is not None:
+        parts.append(_clamp(_r(1 + 4 * (rec["a11y_score"] / 100)), 1, 5))
+    return _clamp(_r(sum(parts) / len(parts)), 1, 5)
 
 
 def _trust(rec):
@@ -149,11 +153,17 @@ def score_competitor(rec: dict) -> dict:
     strength = round(sum(WEIGHTS[k] * scores[k] for k in WEIGHTS) * 20, 1)
     ordered = sorted(scores.items(), key=lambda kv: kv[1])
     lo, hi = ordered[0][1], ordered[-1][1]
+    unverified = []
+    if rec["serp_rank"] is None or rec["ai_overview_cited"] is None or rec["serp_features_owned"] is None:
+        unverified.append("serp")
+    if rec["a11y_score"] is None:
+        unverified.append("ux_perf_a11y")
     return {
         "strength": strength,
         "scores": scores,
         "weakest_dimensions": [k for k, v in ordered if v == lo],
         "strongest_dimensions": [k for k, v in ordered if v == hi],
+        "unverified_dimensions": unverified,
     }
 
 
@@ -201,6 +211,15 @@ def _selftest() -> int:
         failures.append("dr=150 did not raise")
     except ContractError:
         pass
+
+    # NULL handling: unmeasured SERP + a11y + 0-click auto-compute must score, not raise
+    nulls = dict(strong, serp_rank=None, ai_overview_cited=None,
+                 serp_features_owned=None, a11y_score=None, clicks_to_result=0)
+    rn = score_competitor(nulls)
+    if "serp" not in rn["unverified_dimensions"] or "ux_perf_a11y" not in rn["unverified_dimensions"]:
+        failures.append("null inputs not flagged in unverified_dimensions")
+    if not (20.0 <= rn["strength"] <= 100.0):
+        failures.append("null-input record did not score in range")
 
     if failures:
         print("competitor_strength selftest FAIL:")

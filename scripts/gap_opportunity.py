@@ -8,7 +8,7 @@ building it is. SINGLE SOURCE OF TRUTH; references/scoring-model.md mirrors it.
             + 0.15*Defensibility) * 20                              # 20..100
     opportunity = base * buildability_factor * weakness_gate
         buildability_factor: not_shippable=0.0 high=0.6 medium=0.8 trivial=1.0
-        weakness_gate: 0.0 if incumbent_weakness <= 1 else 1.0   (not a real gap)
+        weakness_gate: 0.0 if incumbent_weakness <= 2 else 1.0   (not a consensus gap unless a strict majority of incumbents fail)
     tier: reasoned evidence -> 'hypothesis' (never committable)
           opportunity == 0   -> 'skip'
           >= 70 -> 'build-now'   40..69 -> 'v2'   < 40 -> 'skip'
@@ -57,7 +57,7 @@ def score_gap(gap: dict) -> dict:
     validate(gap)
     base = sum(WEIGHTS[k] * gap[k] for k in WEIGHTS) * 20
     bf = BUILDABILITY[gap["buildability"]]
-    weakness_gate = 0.0 if gap["incumbent_weakness"] <= 1 else 1.0
+    weakness_gate = 0.0 if gap["incumbent_weakness"] <= 2 else 1.0
     opportunity = round(base * bf * weakness_gate, 1)
     et = gap["evidence_tier"]
     committable = et in {"real-measured", "triangulated"}
@@ -105,6 +105,12 @@ def _selftest() -> int:
              buildability="trivial", evidence_tier="real-measured")
     if score_gap(g)["opportunity"] != 0.0 or score_gap(g)["tier"] == "build-now":
         failures.append("solved gap (weakness=1) not gated to 0")
+
+    # GOLDEN: a gap a majority of incumbents already solve (iw=2) -> gated to 0
+    g = dict(demand=5, incumbent_weakness=2, ai_resistance=5, defensibility=5,
+             buildability="trivial", evidence_tier="real-measured")
+    if score_gap(g)["opportunity"] != 0.0 or score_gap(g)["tier"] == "build-now":
+        failures.append("iw=2 gap not gated to 0 (weakness_gate too loose)")
 
     # GOLDEN: reasoned evidence -> hypothesis, never committable
     g = dict(demand=5, incumbent_weakness=5, ai_resistance=5, defensibility=5,

@@ -4,7 +4,7 @@
 
 Mirrors `pick-next-tool` ADR-0009. A scoring engine that silently passes on missing
 or unverifiable input is worse than one that refuses: confident wrong output is
-harder to catch than an explicit refusal. The competitive-analysis skill has the same
+harder to catch than an explicit refusal. The projects-competitive-analysis skill has the same
 failure mode — a missing `incumbent_weakness` measure can silently default to zero
 (looks like incumbents are weak) or to a high assumed value (looks like a moat),
 both wrong and both undetectable without the ContractError.

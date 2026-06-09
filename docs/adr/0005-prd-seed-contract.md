@@ -4,7 +4,7 @@
 
 ## Context
 
-The competitive-analysis skill's primary deliverable is not a prose report — it is
+The projects-competitive-analysis skill's primary deliverable is not a prose report — it is
 a structured data block that seeds the next stage of the pipeline: PRD generation.
 If field names drift between runs the downstream PRD-generation skill cannot parse
 the handoff without bespoke mapping logic. Field names are an API surface. They must
@@ -18,7 +18,7 @@ verbatim in the block: `build-now`, `v2`, `skip`, `hypothesis`.
 
 ## Decision
 
-The competitive-analysis skill appends a fenced YAML block to `COMPETITIVE-BRIEF.md`
+The projects-competitive-analysis skill appends a fenced YAML block to `COMPETITIVE-BRIEF.md`
 (Section 8 of the brief). The block is led by the key `prd_seed:`. The future
 PRD-generation skill reads this block directly by parsing the fenced YAML in-file —
 it is a hard failure if the block is absent or its YAML is malformed.

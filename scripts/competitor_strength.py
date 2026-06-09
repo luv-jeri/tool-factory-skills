@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """competitor_strength.py — deterministic competitor-strength engine.
 
-Part of the `competitive-analysis` skill. SINGLE SOURCE OF TRUTH for the
+Part of the `projects-competitive-analysis` skill. SINGLE SOURCE OF TRUTH for the
 strength score. references/scoring-model.md mirrors this file; if they ever
 disagree, THIS FILE WINS and the doc is the bug.
 

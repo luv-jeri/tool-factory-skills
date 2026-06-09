@@ -33,7 +33,7 @@ Do this **once**; after that each skill run is hands-off for the data it control
 
 ## Shared keys with `pick-next-tool`
 
-`competitive-analysis` reuses **the same two keys** that `pick-next-tool` already
+`projects-competitive-analysis` reuses **the same two keys** that `pick-next-tool` already
 uses for its DR-wall and SERP gates. If you have already followed
 [`pick-next-tool`'s SETUP.md](../../pick-next-tool/SETUP.md) you already have
 `OPENPAGERANK_API_KEY` and `SERPAPI_KEY` set — **no further action needed**.

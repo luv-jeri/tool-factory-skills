@@ -56,7 +56,7 @@ def extract_jsonld(html: str) -> dict:
 def _fetch(url: str) -> str:
     import urllib.request
     req = urllib.request.Request(
-        url, headers={"User-Agent": "Mozilla/5.0 (competitive-analysis skill)"})
+        url, headers={"User-Agent": "Mozilla/5.0 (projects-competitive-analysis skill)"})
     with urllib.request.urlopen(req, timeout=20) as resp:
         return resp.read().decode("utf-8", "replace")
 

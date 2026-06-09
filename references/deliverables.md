@@ -21,7 +21,7 @@ Every section is required. A brief missing any section fails Stage 7 PASS.
 - **Methodology:** staged + gated pipeline (see references/audit-procedure.md)
 - **Source ledger:** research-raw.json (every claim is traceable)
 - **Tool slug:** <tool-slug>
-- **Skill version:** competitive-analysis v<x>
+- **Skill version:** projects-competitive-analysis v<x>
 
 ---
 
@@ -150,7 +150,7 @@ Every claim in the brief traces to an entry here. The file is the audit trail.
 {
   "tool_slug": "time-card-calculator",
   "generated_at": "YYYY-MM-DDTHH:MM:SSZ",
-  "skill_version": "competitive-analysis v1",
+  "skill_version": "projects-competitive-analysis v1",
 
   // Top-level claim ledger: each entry backs one fact in the brief.
   "claims": [

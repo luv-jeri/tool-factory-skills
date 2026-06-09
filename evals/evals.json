@@ -1,5 +1,5 @@
 {
-  "skill": "competitive-analysis",
+  "skill": "projects-competitive-analysis",
   "notes": "RED-GREEN evals. RED = a skill-less agent should exhibit the failure mode (the exact weaknesses of the prior time-card brief). GREEN = with the skill, the failure is corrected.",
   "evals": [
     {

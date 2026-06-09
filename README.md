@@ -1,4 +1,4 @@
-# competitive-analysis
+# projects-competitive-analysis
 
 A [Claude Code](https://docs.claude.com/en/docs/claude-code) **skill** that turns a product gist or PRD stub into a **measured, source-ledgered competitive brief** — so every gap, strength claim, and exploit recommendation rests on a number pulled from a live source, not an assertion. It is the twin of [`pick-next-tool`](https://github.com/luv-jeri/pick-next-tool), one stage downstream: where that skill picks *which* tool to build, this one tells you *what to build and why you'll win.*
 
@@ -59,13 +59,13 @@ python3 scripts/parse_jsonld.py --selftest      # verified-schema extractor
 
 ```bash
 # project-level (this project only)
-git clone https://github.com/luv-jeri/competitive-analysis .claude/skills/competitive-analysis
+git clone https://github.com/luv-jeri/projects-competitive-analysis .claude/skills/projects-competitive-analysis
 
 # or user-level (all projects)
-git clone https://github.com/luv-jeri/competitive-analysis ~/.claude/skills/competitive-analysis
+git clone https://github.com/luv-jeri/projects-competitive-analysis ~/.claude/skills/projects-competitive-analysis
 ```
 
-Then invoke it in Claude Code with `/competitive-analysis` (give it a product gist or PRD).
+Then invoke it in Claude Code with `/projects-competitive-analysis` (give it a product gist or PRD).
 
 ## Run modes & data modes
 

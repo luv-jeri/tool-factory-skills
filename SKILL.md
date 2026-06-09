@@ -1,13 +1,13 @@
 ---
-name: competitive-analysis
+name: projects-competitive-analysis
 description: Use when running a deep competitive analysis for a web tool or micro-app before writing its PRD — triggers include "run a competitive analysis", "deep competitor research", "analyze competitors for this tool", "competitive teardown", "who are we up against", "what should we build to beat them". Also use to turn a pick-next-tool decision into a measured competitive brief, or when an existing competitor brief is too shallow (no SERP rankings, no Core Web Vitals, unverified schema, no source ledger). Produces a measured COMPETITIVE-BRIEF plus a PRD-ready handoff block in the tool's build folder.
 ---
 
-# competitive-analysis
+# projects-competitive-analysis
 
 ## Overview
 
-Converts a product gist or PRD stub into a MEASURED, source-ledgered competitive brief that feeds the PRD — so every gap, every strength claim, and every exploit recommendation rests on a number pulled from a live source, not an assertion. This skill is the twin of pick-next-tool, one stage downstream: where pick-next-tool selects the tool to build, competitive-analysis tells you exactly what to build and why you will win. The same discipline — evidence tiers, adversarial kill pass, engine-scored outputs — applies here. Skipping any step produces a brief that reads well but directs you to build the wrong thing.
+Converts a product gist or PRD stub into a MEASURED, source-ledgered competitive brief that feeds the PRD — so every gap, every strength claim, and every exploit recommendation rests on a number pulled from a live source, not an assertion. This skill is the twin of pick-next-tool, one stage downstream: where pick-next-tool selects the tool to build, projects-competitive-analysis tells you exactly what to build and why you will win. The same discipline — evidence tiers, adversarial kill pass, engine-scored outputs — applies here. Skipping any step produces a brief that reads well but directs you to build the wrong thing.
 
 ## When to use
 
@@ -17,8 +17,8 @@ digraph when {
   q1 [shape=diamond label="Do you have a product gist, PRD stub,\nor pick-next-tool winner?"];
   q2 [shape=diamond label="Is the goal competitor research\nor pre-PRD analysis?"];
   q3 [shape=diamond label="Is an existing brief missing\nmeasured numbers or a source ledger?"];
-  use [shape=box label="Use competitive-analysis\n(run the full funnel)"];
-  deepen [shape=box label="Use competitive-analysis\nin brief-deepening mode\n(Stage 5 onward, reuse prior discovery)"];
+  use [shape=box label="Use projects-competitive-analysis\n(run the full funnel)"];
+  deepen [shape=box label="Use projects-competitive-analysis\nin brief-deepening mode\n(Stage 5 onward, reuse prior discovery)"];
   skip [shape=box label="Not this skill — use pick-next-tool\nor go straight to PRD"];
   exit [shape=doublecircle label="Proceed"];
   entry -> q1;
@@ -86,7 +86,7 @@ Full credential setup and free-vs-paid tradeoffs: `references/data-sources.md` a
 
 ## Mandatory checklist
 
-Announce: **"Using competitive-analysis to analyze competitors for [tool]."** Then create a TodoWrite item for EACH stage below and complete them in order. Do not advance to the next stage until the current stage is PASS.
+Announce: **"Using projects-competitive-analysis to analyze competitors for [tool]."** Then create a TodoWrite item for EACH stage below and complete them in order. Do not advance to the next stage until the current stage is PASS.
 
 ```
 0. Intake — confirm product gist, target keyword cluster, and build folder path;

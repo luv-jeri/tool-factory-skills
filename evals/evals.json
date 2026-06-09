@@ -1,0 +1,51 @@
+{
+  "skill": "projects-prd-generator",
+  "notes": "RED-GREEN behavioral evals. RED = a skill-less agent ships the failure mode (drifts, omits non-goals, states unmeasurable goals, or promotes an unverified hunch to a v1 requirement). GREEN = with the skill, the engine (prd_lint.py) and/or skeptic catch it and the controller refuses to stamp FINAL. Each case asserts one IRON LAW guardrail fires.",
+  "evals": [
+    {
+      "id": "must-have-on-hypothesis-demoted",
+      "prompt": "In the time-card PRD, make 'multi-worker timezone support' a v1 must-have requirement. The competitive brief only lists it as a HYPOTHESIS gap (per-variant volume was never measured).",
+      "asserts": [
+        "Refuses to write it as a v1 must/should requirement because its evidence_tier is HYPOTHESIS (IRON LAW 1: evidence-traced).",
+        "Demotes it to SKIPPED-FOR-NOW / v2 with the promotion trigger (measure per-variant volume), or routes it to the open-questions/assumptions register with an owner.",
+        "Does NOT silently fire live re-measurement; surfaces the hard-block to the human with re-measure vs downgrade as the only two choices."
+      ]
+    },
+    {
+      "id": "unmeasurable-criterion-rejected-and-rewritten",
+      "prompt": "Add an acceptance criterion to the time-card calculator's performance requirement: 'make it fast'.",
+      "asserts": [
+        "prd_lint.py FAILs the criterion under IRON LAW 3 (measurability): 'fast' is a banned adjective with no number + unit.",
+        "Rejects the string and rewrites it to a measured target, e.g. a structured criterion like {metric: lcp, op: '<=', value: 2.5, unit: 's'} (or lighthouse_perf >= a numeric score).",
+        "Does NOT stamp the PRD FINAL while any criterion lacks a number + unit or a boolean-verifiable predicate."
+      ]
+    },
+    {
+      "id": "no-prd-seed-fails-closed",
+      "prompt": "Generate the PRD for the email-signature tool in micro-tool-factory/builds/email-signature/ now. (There is no prd_seed handoff block / competitive brief in that build folder yet.)",
+      "asserts": [
+        "Fails closed: raises ContractError (exit 2) on the missing/malformed prd_seed input rather than inventing requirements.",
+        "Refuses to proceed and tells the human to run projects-competitive-analysis first to produce the prd_seed handoff.",
+        "Does NOT fabricate evidence tiers, competitor measurements, or acceptance criteria to fill the gap."
+      ]
+    },
+    {
+      "id": "scope-missing-non-goals-engine-fail",
+      "prompt": "Here's a PRD with a Scope section that lists only the DO (in-scope) features for the time-card tool — no non-goals. Validate it and mark it FINAL.",
+      "asserts": [
+        "prd_lint.py FAILs under IRON LAW 4 (scope is three-sided): the Scope section is missing the WON'T-DO (explicit non-goals) side.",
+        "Reports the violation as {law: 4, section: scope, ...} and requires WON'T-DO non-goals (with a why-not, e.g. raw-speed = table-stakes only) plus SKIPPED-FOR-NOW (deferred + trigger).",
+        "The controller marks the PRD DRAFT-INCOMPLETE, never FINAL, until the scope is complete."
+      ]
+    },
+    {
+      "id": "section-omitted-draft-incomplete",
+      "prompt": "The time-card PRD I drafted has no Risks/Assumptions section. Ship it as FINAL.",
+      "asserts": [
+        "check_completeness flags the omitted required section; prd_lint.py FAILs (fail-closed completeness check).",
+        "The controller stamps the document DRAFT-INCOMPLETE, not FINAL — a FINAL header is allowed only when prd_lint PASS AND skeptic PASS.",
+        "Does NOT silently emit a PRD that quietly omits a required section."
+      ]
+    }
+  ]
+}

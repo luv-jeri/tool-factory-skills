@@ -1,13 +1,18 @@
-# Setup for API-backed data modes (one-time)
+# Setup — API credentials (one-time prerequisite)
 
-This guide covers the **two optional API credentials** that unlock automated data
-pulls in `competitive-analysis`. Do this **once**; after that each skill run is
-hands-off for the data it controls.
+> **PREREQUISITE WARNING:** `SERPAPI_KEY` and `OPENPAGERANK_API_KEY` are **required** for the SERP/AI-Overview
+> and DR pillars. The automation browser is CAPTCHA-blocked by Google and Bing, so the browser-driven SERP path
+> is not a viable alternative for unattended runs. CWV / a11y / schema / content audits still need no keys.
 
-> **You can skip this page if you only use browser-driven mode.**
-> Browser-driven mode drives Lighthouse, the chrome-devtools MCP, and stdlib
-> `parse_jsonld.py` through the live browser — it needs **no keys at all** for CWV,
-> a11y, and schema audits. Keys exist only to remove manual SERP and DR-lookup steps.
+Both keys live in the **project-root `.env`** file (never committed):
+
+```dotenv
+# .env  (NEVER commit this file)
+OPENPAGERANK_API_KEY=your-openpagerank-key-here
+SERPAPI_KEY=your-serpapi-key-here
+```
+
+Do this **once**; after that each skill run is hands-off for the data it controls.
 
 ---
 
@@ -15,15 +20,14 @@ hands-off for the data it controls.
 
 | Data category | Tool / source | Keys required |
 |---|---|---|
-| **Core Web Vitals** (LCP / CLS / INP) | Lighthouse via chrome-devtools MCP | **None** — runs live in browser |
-| **Accessibility** (a11y score) | Lighthouse accessibility audit | **None** — runs live in browser |
+| **Core Web Vitals** (LCP / CLS / INP) | chrome-devtools: `performance_start_trace` → `performance_stop_trace` → `performance_analyze_insight` | **None** — runs live in browser |
+| **Accessibility** (a11y score) | Heuristic: chrome-devtools `take_snapshot` + `evaluate_script` (no native Lighthouse a11y in chrome-devtools MCP) | **None** — or set `null` if not assessed |
 | **Structured-data / schema** (`@type` per competitor) | `parse_jsonld.py` — stdlib JSON-LD parser against live HTML | **None** — pure HTTP + stdlib |
-| **Domain Rating** (DR-wall, authority scoring) | OpenPageRank (DomCop) | `OPENPAGERANK_API_KEY` |
-| **SERP layout + AI-Overview detection** (at scale / unattended) | SerpApi | `SERPAPI_KEY` (optional; manual SERP inspection works for single runs) |
+| **Domain Rating** (DR — SERP/authority pillar) ⚠ REQUIRED | OpenPageRank (DomCop): `page_rank_decimal` × 10 → `dr`; understates Ahrefs DR | `OPENPAGERANK_API_KEY` (project-root `.env`) |
+| **SERP rank / AI-Overview / PAA** ⚠ REQUIRED | SerpApi — browser SERP is CAPTCHA-blocked | `SERPAPI_KEY` (project-root `.env`) |
 
-**Summary:** CWV / a11y / schema need **no keys**. DR lookups need
-`OPENPAGERANK_API_KEY`. Automated SERP + AI-Overview detection at scale needs
-`SERPAPI_KEY`.
+**Summary:** CWV / a11y / schema / content need **no keys**. SERP/AI-Overview pillar requires
+`SERPAPI_KEY`; DR/authority pillar requires `OPENPAGERANK_API_KEY`. Both must be in the project-root `.env`.
 
 ---
 
@@ -44,7 +48,7 @@ Add the variables to the project-root `.env` file (or your `~/.zshrc` with
 ```dotenv
 # .env  (NEVER commit this file)
 OPENPAGERANK_API_KEY=your-openpagerank-key-here
-SERPAPI_KEY=your-serpapi-key-here          # optional for single-run use
+SERPAPI_KEY=your-serpapi-key-here
 ```
 
 ---
@@ -69,14 +73,16 @@ it to score `competitor_strength.authority` for each incumbent.
 
 ---
 
-## 2. SerpApi — SERP layout + AI-Overview detection (1 variable, optional)
+## 2. SerpApi — SERP rank / AI-Overview / PAA (1 variable, REQUIRED)
 
 SerpApi returns Google results as clean JSON, including whether an **AI Overview**
-fired for a query (needed for the `gap_opportunity.ai_resistance` score).
+fired for a query (needed for `serp_rank`, `ai_overview_cited`, `serp_features_owned`,
+and the `gap_opportunity.ai_resistance` score).
 
-- **Single runs:** you can inspect the SERP manually in the browser — the skill
-  will prompt you for the AI-Overview Y/N. No key required.
-- **Unattended / batch runs:** set `SERPAPI_KEY` to pull SERP data automatically.
+> **The browser SERP path is CAPTCHA-blocked.** Manual SERP inspection is a fallback
+> only for a single one-off check where null fields are acceptable — it is not a
+> reliable path for any automated or repeatable run. Without this key, all SERP fields
+> will be `null` (UNVERIFIED) and the SERP pillar will be a lower bound only.
 
 1. Go to **https://serpapi.com/users/sign_up** and create a free account (no card
    for the free tier).

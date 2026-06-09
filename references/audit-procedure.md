@@ -186,26 +186,56 @@ Steps are in dependency order — do not reorder.
 
 **Pillar fields filled:** `serp_rank`, `ai_overview_cited`, `serp_features_owned`, PAA questions list.
 
+> **CAPTCHA WARNING:** The automation browser is typically CAPTCHA-blocked by Google and Bing. Get SERP rank,
+> AI-Overview presence, and PAA data from **SerpApi** instead (see `references/data-sources.md` and `SETUP.md`).
+> If neither SerpApi nor a manual SERP is available, set all SERP fields to `null` and mark them `UNVERIFIED`
+> in the ledger — **do not guess**.
+
+**Via SerpApi (preferred when key is available):**
+1. Call SerpApi with `q=<head term>` and `engine=google`; request `ai_overview` parameter.
+2. Parse organic results for `serp_rank` (integer 1–10, or `null` if not found).
+3. Check `ai_overview.sources` for the competitor URL → `ai_overview_cited=True/False/null`.
+4. Count SERP features (featured snippet, PAA, calculator onebox, image/video pack, site-links) → `serp_features_owned`.
+5. Harvest all PAA questions from the response → used for `paa_coverage` in Step 4.
+
+**Via manual browser (single-run fallback only):**
 1. Open `https://www.google.com/search?q=<head+term>` in a fresh browser context (chrome-devtools `navigate_page`).
 2. Take a full-page screenshot (`take_screenshot`).
-3. Scrape DOM for organic results: position each `<a>` in `.MjjYud` (or equivalent Google result container).
-4. Record competitor's position as `serp_rank` (integer 1–10, or `null`).
-5. Check for AI Overview box (`#aiOverview` or `#ai-overview` selector): if present, record `ai_overview_cited=True/False` based on whether the competitor URL appears in the sources.
-6. Count SERP features owned by the competitor: featured snippet, PAA mention, calculator/widget onebox, image/video pack, site-links.
-7. Harvest all PAA questions shown — used for `paa_coverage` calculation in Step 4.
+3. Scrape DOM for organic results; record `serp_rank`; inspect AI Overview box; harvest PAA questions.
+Record all values with `method: "manual_serp"` and `evidence_tier: "real-measured"` in `research-raw.json`.
 
 ---
 
-### Step 2 — Lighthouse audit (CWV + a11y)
+### Step 2 — CWV performance trace + a11y heuristic
 
 **Pillar fields filled:** `lcp_ms`, `cls`, `inp_ms`, `a11y_score` (Pillars 7 + 8).
 
+> **SEQUENTIAL AUDITS REQUIRED:** When multiple competitor audits share a single chrome-devtools browser
+> instance, run them **one at a time** (sequentially). Parallel performance traces collide and corrupt CWV
+> readings. Use isolated context + serialized traces only if you must parallelize.
+
+**CWV — via chrome-devtools performance trace (no native Lighthouse in chrome-devtools MCP):**
+
 1. Navigate to the competitor's tool page (not homepage unless the tool IS the homepage).
-2. Run `lighthouse_audit` (chrome-devtools) — mobile preset first, then desktop.
-   - Mobile: record `lcp_ms`, `cls`, `inp_ms` (or TBT proxy), `a11y_score`, perf score, page weight, request count.
-   - Desktop: record same set (for the brief; script uses mobile values for conservatism).
-3. Attach the raw lighthouse JSON to the ledger entry as `method: "lighthouse_audit"`.
-4. **IRON LAW:** Do not assert any CWV or a11y claim without this step's output. "Seems fast" is not a measurement.
+2. Start a performance trace: `performance_start_trace` with `reload=true` (this reloads the page and begins
+   recording).
+3. Stop the trace: `performance_stop_trace`.
+4. Analyse the trace: `performance_analyze_insight` — this yields **LCP**, **CLS**, and **INP** from both lab
+   measurements and CrUX field data (when available).
+5. Record `lcp_ms`, `cls`, `inp_ms` from the insight output. Attach as `method: "performance_trace"`,
+   `evidence_tier: "real-measured"`.
+
+**a11y score — heuristic only (chrome-devtools has NO native Lighthouse a11y audit):**
+
+chrome-devtools does not expose a Lighthouse accessibility score. `a11y_score` is a **heuristic** derived from:
+- `take_snapshot` (accessibility tree) + `evaluate_script` checks for: form-label coverage, ARIA roles/labels,
+  image alt text, heading order, `lang` attribute on `<html>`.
+- Assign a tier: `triangulated` (if ≥2 checks pass/fail consistently) or `reasoned` (inference only).
+- If the heuristic is not applied, set `a11y_score = null` (UNVERIFIED). The engine will drop it from the
+  `ux_perf_a11y` average and list `ux_perf_a11y` in `unverified_dimensions`.
+
+6. **IRON LAW:** Do not assert any CWV or a11y claim without a measured trace or explicit null + reason.
+   "Seems fast" / "looks accessible" is not a measurement.
 
 ---
 
@@ -225,7 +255,7 @@ Steps are in dependency order — do not reorder.
 **Pillar fields filled:** `clicks_to_result`, `feature_coverage`, gated-features list (Pillar 5 + 6).
 
 1. Open the competitor tool page fresh (not from SERP page).
-2. Count clicks from landing to seeing a result — record as `clicks_to_result` (minimum 1).
+2. Count clicks from landing to seeing a result — record as `clicks_to_result` (0 if the tool auto-computes on load with no user action required; 0 = best UX).
 3. Work through the canonical feature checklist for the tool type (see `references/pillars.md` Pillar 5).
 4. Record which features are present, absent, or gated (email capture / paywall).
 5. Calculate `feature_coverage = present_features / total_checklist_items`.
@@ -253,9 +283,12 @@ python3 scripts/parse_jsonld.py --url <competitor-url>
 **Pillar fields filled:** `dr`, `referring_domains` (Pillar 2), traffic estimate (Pillar 3).
 
 1. OpenPageRank API (free key): `GET https://openpagerank.com/api/v1.0/getPageRank?domains[0]=<domain>`
-   - Record `domainRank` as `dr` (triangulated; note OPR understates Ahrefs DR).
-   - Record `externalBacklinks` as `referring_domains` proxy.
-2. Optionally cross-check with Ahrefs Website Authority Checker (manual, free, no key required).
+   - Response field `page_rank_decimal` is on a **0–10** scale. Multiply × 10 → record as `dr` (0–100 scale).
+   - **Note:** OPR systematically understates true Ahrefs DR. Use for ordinal comparison only.
+   - `externalBacklinks` is **not a reliable referring_domains count** — OPR does not expose full backlink data.
+     `referring_domains` is NOT obtainable from OpenPageRank; it requires Ahrefs or Similarweb (paid/manual).
+     Without it, the `authority` dimension is a LOWER BOUND — mark `referring_domains` as `UNVERIFIED` if absent.
+2. Optionally cross-check DR with Ahrefs Website Authority Checker (manual, free, no key required).
    If both sources agree within ±10 DR points → `evidence_tier: "triangulated"`. If they disagree >10 → flag, use lower value, note discrepancy.
 3. Similarweb free: navigate to `https://www.similarweb.com/website/<domain>/` → record estimated monthly visits and top-keyword count.
 4. Record all values with `url`, `date_accessed`, `method`, `evidence_tier` in `research-raw.json`.

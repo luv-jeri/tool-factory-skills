@@ -78,6 +78,25 @@ Weights are **v0 UNCALIBRATED** — see `docs/adr/0002-scoring-weights.md`.
 
 All required. Missing any → `ContractError` (fail closed).
 
+### Unmeasured inputs
+
+Some fields may be `null` when not measured in a given run:
+
+- **`serp_rank`, `ai_overview_cited`, `serp_features_owned`** — may be `null` if SERP was not fetched (e.g.
+  CAPTCHA-blocked and no SerpApi key). The engine scores them conservatively (rank > 10 = 1, no bonus).
+- **`a11y_score`** — may be `null` if the accessibility heuristic was not applied. The engine drops `a11y_sc`
+  from the `ux_perf_a11y` average when null (averages only the perf + UX sub-scores).
+- **`clicks_to_result`** — may be `0` when the tool auto-computes on load (best UX; scores as 5).
+
+Any dimension affected by a null input is listed in `unverified_dimensions` on the score output. **A dimension
+in `unverified_dimensions` is a LOWER BOUND, not a measured score — never commit an exploit off it.**
+
+### DR input note
+
+`dr` is fed on a **0–100** scale. The free OpenPageRank proxy returns `page_rank_decimal` on a **0–10** scale;
+multiply by 10 before passing to the engine. This proxy **understates** true Ahrefs DR — use it for ordinal
+ranking only, not as a precise DR claim.
+
 ---
 
 ### authority (weight 0.30)
@@ -231,9 +250,10 @@ opportunity = base × buildability_factor × weakness_gate
 
 ### weakness_gate
 
-`weakness_gate = 0.0 if incumbent_weakness ≤ 1 else 1.0`
+`weakness_gate = 0.0 if incumbent_weakness <= 2 else 1.0`
 
-A gap all competitors already solved (`incumbent_weakness ≤ 1`) is zeroed out — it is not a real gap.
+A gap is only real if a strict MAJORITY of incumbents measurably fail it. Gaps where `incumbent_weakness <= 2`
+(i.e. few or no competitors fail) are zeroed out — they are not real gaps.
 
 ### reasoned → hypothesis rule
 
@@ -283,7 +303,7 @@ Step-by-step:
 
 ---
 
-### Snapshot B — gap opportunity → **64.8 / v2**
+### Snapshot B — gap opportunity → **64.8 / v2** (incumbent_weakness=4, gate passes)
 
 Input (from `_selftest()` in `gap_opportunity.py`):
 
@@ -296,7 +316,7 @@ defensibility=3, buildability="medium", evidence_tier="real-measured"
 `= (1.40 + 1.20 + 1.00 + 0.45) × 20`
 `= 4.05 × 20 = 81.0`
 
-`weakness_gate = 1.0` (incumbent_weakness=4 > 1)
+`weakness_gate = 1.0` (incumbent_weakness=4 > 2)
 `buildability_factor = 0.8` (medium)
 `opportunity = 81.0 × 0.8 × 1.0 = 64.8`
 tier = `v2` (40 ≤ 64.8 < 70) ✓

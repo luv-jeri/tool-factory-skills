@@ -146,6 +146,11 @@ ALWAYS run `scripts/competitor_strength.py` and `scripts/gap_opportunity.py` —
 
 ## How to run the audit
 
+> **Two operational constraints:** (1) When competitor audits share a single chrome-devtools browser, run
+> them **sequentially** (one at a time) — parallel performance traces corrupt CWV readings. (2) SERP rank,
+> AI-Overview, and PAA **must come from SerpApi** (`SERPAPI_KEY` in project-root `.env`) — the automation
+> browser is CAPTCHA-blocked by Google. Without SerpApi all SERP fields will be null (UNVERIFIED).
+
 Invoke `scripts/audit-workflow.js` via the Workflow tool:
 
 ```json

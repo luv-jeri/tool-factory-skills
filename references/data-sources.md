@@ -16,13 +16,14 @@ when the free path is exhausted or returns no data.
 
 | Need | Free tool | Evidence tier | Paid escape hatch |
 |---|---|---|---|
-| CWV / perf / a11y | `chrome-devtools lighthouse_audit` | real-measured | — (already real-measured & free) |
+| CWV (LCP/CLS/INP) | chrome-devtools: `performance_start_trace` (reload=true) → `performance_stop_trace` → `performance_analyze_insight` | real-measured | — |
+| a11y score | chrome-devtools heuristic: `take_snapshot` + `evaluate_script` (form-label, ARIA, alt, heading, lang) → `triangulated`/`reasoned`; `null` if not assessed | triangulated / null | — |
 | Structured data (JSON-LD) | `scripts/parse_jsonld.py --url <url>` — fetch + extract + validate | real-measured | — |
-| SERP positions (1–10) | chrome-devtools → Google live SERP (screenshot + DOM scrape) | real-measured | SerpApi (paid key) |
-| AI-Overview presence + citations | Same SERP capture — inspect AI Overview box | real-measured | SerpApi with `ai_overview` parameter |
-| SERP features (featured snippet, PAA, onebox) | Same SERP capture | real-measured | SerpApi |
-| Domain authority (DR) | OpenPageRank free key (`openpagerank.com/api/v1.0/getPageRank`) | triangulated | Ahrefs paid (true DR) |
-| Referring domains count | OpenPageRank `externalBacklinks` field | triangulated | Ahrefs paid |
+| **SERP positions (1–10)** ⚠ REQUIRED | **SerpApi** (`SERPAPI_KEY`) — browser SERP is CAPTCHA-blocked; key lives in project-root `.env` | real-measured | DataForSEO |
+| **AI-Overview presence + citations** ⚠ REQUIRED | **SerpApi** `ai_overview` parameter (same key) | real-measured | — |
+| **SERP features (featured snippet, PAA, onebox)** ⚠ REQUIRED | **SerpApi** (same key) | real-measured | — |
+| **Domain authority (DR)** ⚠ REQUIRED | **OpenPageRank** (`OPENPAGERANK_API_KEY`): `page_rank_decimal` (0–10) × 10 → `dr` (0–100); understates true Ahrefs DR — ordinal use only; key lives in project-root `.env` | triangulated | Ahrefs paid (true DR) |
+| Referring domains count | **NOT available from OpenPageRank or chrome-devtools.** Requires Ahrefs or Similarweb (paid/manual). Without it, `authority` dimension is a LOWER BOUND — mark `referring_domains` `UNVERIFIED`. | — | Ahrefs paid / Similarweb paid |
 | Traffic estimate | Similarweb free site overview (`similarweb.com/website/<domain>/`) | triangulated | Similarweb paid / Ahrefs paid |
 | Keyword footprint | Ahrefs free Keyword Explorer "Top keywords" tab (manual, no key) | triangulated | Ahrefs paid |
 | Demand / volume buckets | Reuse `pick-next-tool` `volume_buckets.py` / `autocomplete_fanout.py` outputs | real-measured (if already run) | Google Ads API (paid seat) |

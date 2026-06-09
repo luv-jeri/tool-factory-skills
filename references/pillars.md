@@ -1,4 +1,4 @@
-# Measurement pillars — the 10 dimensions
+# Measurement pillars — the 10 pillars
 
 Every analyzed competitor is scored on all 10 pillars. Fields listed here feed the scripts directly;
 `references/scoring-model.md` documents how each field maps to a sub-score.
@@ -11,7 +11,7 @@ Every analyzed competitor is scored on all 10 pillars. Fields listed here feed t
 2. [Pillar 2 — Domain & link authority ✦](#pillar-2--domain--link-authority-)
 3. [Pillar 3 — Traffic & demand capture ✦](#pillar-3--traffic--demand-capture-)
 4. [Pillar 4 — On-page SEO & content depth](#pillar-4--on-page-seo--content-depth)
-5. [Pillar 4b — Structured data](#pillar-4b--structured-data)
+5. [Pillar 4b (sub-pillar of 4) — Structured data](#pillar-4b-sub-pillar-of-4--structured-data)
 6. [Pillar 5 — Product/feature completeness](#pillar-5--productfeature-completeness)
 7. [Pillar 6 — UI/UX quality ✦](#pillar-6--uiux-quality-)
 8. [Pillar 7 — Performance / Core Web Vitals ✦](#pillar-7--performance--core-web-vitals-)
@@ -85,7 +85,7 @@ Additional fields captured for the brief (not in strength formula):
 
 ---
 
-## Pillar 4b — Structured data
+## Pillar 4b (sub-pillar of 4) — Structured data
 
 **Script fields fed:** `schema_types` (list of JSON-LD type strings)
 

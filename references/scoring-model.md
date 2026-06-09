@@ -155,6 +155,7 @@ PAA sub-score: `clamp(round(1 + 4 × paa_coverage), 1, 5)` where `paa_coverage` 
 ### ux_perf_a11y (weight 0.13)
 
 Average of perf_sc, a11y_sc, ux_sc, rounded, clamped 1..5. `perf_sc` is itself the round-average of lcp_sc + cls_sc + inp_sc.
+(Final score = half-up round of the outer average of (perf_sc, a11y_sc, ux_sc), where perf_sc is itself the rounded average of the lcp_sc, cls_sc, and inp_sc sub-scores.)
 
 | Sub-score | lcp_ms rule |
 |---|---|

@@ -259,3 +259,21 @@ python3 scripts/parse_jsonld.py --url <competitor-url>
    If both sources agree within ±10 DR points → `evidence_tier: "triangulated"`. If they disagree >10 → flag, use lower value, note discrepancy.
 3. Similarweb free: navigate to `https://www.similarweb.com/website/<domain>/` → record estimated monthly visits and top-keyword count.
 4. Record all values with `url`, `date_accessed`, `method`, `evidence_tier` in `research-raw.json`.
+
+---
+
+### Step 7 — On-page content audit
+
+**Purpose:** Collect the on-page SEO pillar fields (`word_count`, `heading_count`, `paa_coverage`) that fill Pillar 4 (On-page SEO & content depth). These fields are required by `competitor_strength.py` and must be real-measured.
+
+**Tool:** chrome-devtools (`get_page_text` + DOM inspection of the competitor's ranking page).
+
+**Pillar fields filled:** `word_count`, `heading_count`, `paa_coverage` (Pillar 4).
+
+1. Navigate to the competitor's ranking page (the URL found at their SERP position in Step 1).
+2. Call `get_page_text` (chrome-devtools) to retrieve visible page text. Strip navigation, footer, sidebar, and ad regions — count words in the main content block (`<main>`, `<article>`, or the largest contiguous text block). Record as `word_count` (int).
+3. Inspect the DOM (chrome-devtools `evaluate_script` or equivalent): count all `<h1>`, `<h2>`, and `<h3>` elements present on the page. Record as `heading_count` (int).
+4. Using the PAA questions list harvested in Step 1, evaluate how many of those questions are answered by content on this competitor page (a question is "answered" if the page contains a direct response in text). Divide answered count by total PAA question count; record as `paa_coverage` (float 0.0–1.0). If Step 1 found zero PAA questions, record `paa_coverage = 0.0`.
+5. Attach evidence as `method: "chrome_devtools_dom"`, `evidence_tier: "real-measured"` in `research-raw.json`.
+
+**IRON LAW:** Do not assert `word_count`, `heading_count`, or `paa_coverage` without completing this step. "The page looks content-rich" is not a measurement.

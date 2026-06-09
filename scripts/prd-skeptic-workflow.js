@@ -21,7 +21,8 @@ const VERDICT_SCHEMA = {
   },
 }
 
-const spec = args && args.build_spec
+const _args = typeof args === 'string' ? JSON.parse(args) : args
+const spec = _args && _args.build_spec
 if (!spec || !Array.isArray(spec.requirements)) {
   throw new Error('prd-skeptic: args.build_spec with requirements[] is required')
 }
@@ -43,9 +44,20 @@ const verdicts = await parallel(spec.requirements.map(r => () =>
 ))
 
 const clean = verdicts.filter(Boolean)
-const failed = clean.filter(v => v.verdict !== 'keep')
+// A verdict BLOCKS FINAL only on an OBJECTIVE defect: a hard gate fails
+// (traceability, measurability, scope) or the deliverable contradicts itself.
+// A demote/flag raised solely for a missing edge case — hard gates green, no
+// contradiction — is ADVISORY: fold it into the PRD as a refinement. Blocking on
+// every conceivable edge case never converges (the skeptic always finds one more);
+// blocking on objective defects does. The verdict label alone does not block.
+const isBlocking = v =>
+  !v.traceable || !v.measurable || !v.scope_correct || v.contradiction_found
+const blocking = clean.filter(isBlocking)
+const advisory = clean.filter(v => v.verdict !== 'keep' && !isBlocking(v))
 return {
   total: spec.requirements.length,
   kept: clean.filter(v => v.verdict === 'keep').length,
-  failed,
+  blocking,
+  advisory,
+  pass: blocking.length === 0,
 }

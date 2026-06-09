@@ -22,6 +22,12 @@ The human single source of truth. Do **not** retype the section list here — co
 `prd_lint.check_completeness` requires) and fill each section from the
 `prd_seed` field noted in that template.
 
+**Never silently overwrite an existing PRD.** If `PRD.md` already exists in the
+build folder (e.g. a hand-written draft), write the generated PRD to
+`PRD-<version>-generated.md` instead, add a `> Supersedes: PRD.md` line to its
+header, and leave the rename/replace decision to the human. This mirrors how the
+upstream brief lands as `COMPETITIVE-BRIEF-v2-measured.md` beside the original.
+
 Header block to paste at the very top of `PRD.md`:
 
 ```markdown

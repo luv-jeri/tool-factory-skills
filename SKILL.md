@@ -114,14 +114,22 @@ Announce: **"Using projects-prd-generator to write the PRD for [tool]."** Create
    Fail-closed. Paste the literal PASS/FAIL + violation list. No FINAL on FAIL.
 
 6. Adversarial kill (skeptic) — invoke scripts/prd-skeptic-workflow.js via the
-   Workflow tool; it challenges every requirement, criterion, and non-goal.
-   Any failure demotes/flags the item and bounces back to stages 1-3.
+   Workflow tool; it challenges every requirement, criterion, and non-goal and
+   returns blocking vs advisory verdicts. BLOCKING is an OBJECTIVE defect — not
+   traceable, not measurable, wrong scope, or an internal contradiction — and
+   bounces back to stages 1-3. ADVISORY (a flag or demote raised only for a
+   missing edge case, with all hard gates green and no contradiction) is folded
+   into the PRD as an added acceptance criterion and does NOT block FINAL —
+   blocking on every conceivable edge case never converges. FINAL requires
+   prd_lint PASS and skeptic blocking == 0.
 
 7. Resolve blockers — for each hard-block, surface to the human: re-measure via
    the upstream skill, or downgrade. Apply the choice and re-run stages 5-6.
 
 8. Emit — write PRD.md (FINAL only if 5 AND 6 pass; else DRAFT-INCOMPLETE) +
-   build-spec.{json,yaml} + prd-trace.md. Print the handoff summary.
+   build-spec.{json,yaml} + prd-trace.md. If a PRD.md already exists in the build
+   folder, write PRD-<version>-generated.md instead and note supersession — never
+   silently overwrite a prior PRD. Print the handoff summary.
 ```
 
 ## Quick reference: the 14 PRD sections

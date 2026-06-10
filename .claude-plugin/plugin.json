@@ -1,0 +1,22 @@
+{
+  "name": "tool-factory",
+  "version": "1.0.0",
+  "description": "Evidence-gated skill pipeline for shipping AdSense-monetized micro web tools: pick the next tool, measure the competition, generate a fail-closed PRD — with build, SEO, ship, and monetization skills on the roadmap. Every skill: IRON LAWS, fail-closed engines, adversarial kill passes, RED-GREEN evals.",
+  "author": {
+    "name": "luv-jeri",
+    "url": "https://github.com/luv-jeri"
+  },
+  "homepage": "https://github.com/luv-jeri/tool-factory-skills",
+  "repository": "https://github.com/luv-jeri/tool-factory-skills",
+  "license": "MIT",
+  "keywords": [
+    "claude-code",
+    "skills",
+    "seo",
+    "adsense",
+    "micro-tools",
+    "competitive-analysis",
+    "prd",
+    "product-pipeline"
+  ]
+}

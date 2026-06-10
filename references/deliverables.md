@@ -289,13 +289,27 @@ prd_seed:
     what_aio_covers: "<what the AI Overview currently answers for this cluster>"
     mitigation: "<how we remain necessary despite AIO>"
 
+  pain_points:                       # Pillar 11 — voice-of-customer (verbatim quotes live in the ledger)
+    - pain: "<one-line pain statement>"
+      evidence: "<claim_id(s) — quote + url + date_accessed in research-raw.json>"
+      sources_count: 0               # independent sources expressing it (>=3 required for exploit-grade)
+      competitors_failing: []        # who measurably fails it (Pillar 5/6 audit)
+      maps_to: "<must_have_feature | v2_feature | open_question>"
+
+  input_ergonomics:                  # Pillar 6 measured baselines for the canonical job
+    canonical_job: "<e.g. enter one week of times and get the weekly total>"
+    best_competitor_interactions: 0  # lowest measured interactions_to_result across audited rivals
+    typed_free_text_fields: []       # structured fields rivals collect by free-text typing (friction to beat)
+    target: "<our budget, e.g. <=15 interactions/week, zero typed time fields, native pickers + copy-down>"
+
   seo_content_spec:
     word_count_target: 0      # set to beat best measured competitor + PAA coverage
     headings:
       - "<H2 topic>"
     schema_types:
       - WebApplication
-      # add all types to implement
+      # add all types to implement; each rich-result claim must be verified against
+      # Google's CURRENT supported structured-data list (<=60 days) or marked parity-only
     paa_to_answer:
       - "<PAA question from live SERP>"
 

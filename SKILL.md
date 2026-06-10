@@ -1,6 +1,6 @@
 ---
 name: projects-competitive-analysis
-description: Use when running a deep competitive analysis for a web tool or micro-app before writing its PRD — triggers include "run a competitive analysis", "deep competitor research", "analyze competitors for this tool", "competitive teardown", "who are we up against", "what should we build to beat them". Also use to turn a pick-next-tool decision into a measured competitive brief, or when an existing competitor brief is too shallow (no SERP rankings, no Core Web Vitals, unverified schema, no source ledger). Produces a measured COMPETITIVE-BRIEF plus a PRD-ready handoff block in the tool's build folder.
+description: Use when running a deep competitive analysis for a web tool or micro-app before writing its PRD — triggers include "run a competitive analysis", "deep competitor research", "analyze competitors for this tool", "competitive teardown", "who are we up against", "what should we build to beat them". Also use to turn a pick-next-tool decision into a measured competitive brief, when mining customer pain points or input-ergonomics friction ("what do users complain about", "why do people hate these tools", typing vs picker friction), or when an existing competitor brief is too shallow (no SERP rankings, no Core Web Vitals, unverified schema, no pain-point evidence, no source ledger). Produces a measured COMPETITIVE-BRIEF plus a PRD-ready handoff block in the tool's build folder.
 ---
 
 # projects-competitive-analysis
@@ -64,7 +64,7 @@ digraph funnel {
   s0 [shape=doublecircle label="Intake"];
   s1 [shape=box label="1 Discover — SERP scrape, schema parse,\nidentify 5-9 real competitors"];
   s2 [shape=box label="2 Triage — drop irrelevant verticals,\nrank survivors by DR + SERP position"];
-  s3 [shape=box label="3 Audit fan-out — run audit-workflow.js\nper competitor (10 pillars, measured)"];
+  s3 [shape=box label="3 Audit fan-out — run audit-workflow.js\nper competitor (11 pillars, measured)\n+ voice-of-customer pain mining"];
   s4 [shape=box label="4 Score — competitor_strength.py\nper competitor on measured inputs"];
   s5 [shape=box label="5 Gap synthesis — gap_opportunity.py\non the scored field matrix"];
   s6 [shape=box label="6 Adversarial kill — separate skeptic\nchallenges every gap and exploit"];
@@ -101,7 +101,10 @@ Announce: **"Using projects-competitive-analysis to analyze competitors for [too
 
 3. Audit fan-out — invoke scripts/audit-workflow.js via the Workflow tool with
    {scriptPath, args:{cluster, competitors, pillar_fields}}; one audit run per
-   competitor; all 10 pillars; all outputs MEASURED or marked UNVERIFIED.
+   competitor; all 11 pillars; all outputs MEASURED or marked UNVERIFIED.
+   Pillar 11 pain mining runs once per CLUSTER (not per competitor): Reddit/
+   forums/review mining with verbatim quotes + URLs into the ledger; Pillar 6
+   interactions_to_result + input_modality_map measured per competitor.
 
 4. Score — run scripts/competitor_strength.py on each competitor's measured audit
    output; paste literal printed scores into the brief; do NOT hand-assign.
@@ -117,10 +120,12 @@ Announce: **"Using projects-competitive-analysis to analyze competitors for [too
    source ledger as LEDGER.md; no claim in the brief without a ledger entry.
 
 8. Handoff — produce PRD-HANDOFF.md: top 3 exploits (adversarial-pass survivors
-   only), pillar targets, schema targets, CWV targets with competitor baselines.
+   only), pillar targets, schema targets, CWV targets with competitor baselines,
+   plus prd_seed.pain_points (>=3-source, audit-confirmed) and
+   prd_seed.input_ergonomics (canonical job + best-competitor interaction count).
 ```
 
-## Quick reference: the 10 pillars
+## Quick reference: the 11 pillars
 
 Full detail and scoring rubrics: `references/pillars.md`.
 
@@ -136,6 +141,7 @@ Full detail and scoring rubrics: `references/pillars.md`.
 | 8 | Export / share | File formats offered, friction | Manual audit |
 | 9 | Mobile experience | Responsive breakpoints, tap targets | Lighthouse mobile |
 | 10 | Content / trust signals | About page, author, update dates | Manual + parse_jsonld.py |
+| 11 | Voice-of-customer pain points | Verbatim complaints (quote+URL+date) from Reddit/reviews/PAA; input-ergonomics friction: interactions_to_result, typed-text vs picker per field | Browser mining + Pillar 6 counts |
 
 ## Quick reference: scoring
 
@@ -184,6 +190,9 @@ Do not read `audit-workflow.js` into context to study it — execute it.
 | "Competitor X has bad UX, users will prefer us." | Lighthouse a11y score + specific violations, or it is an opinion, not an exploit. |
 | "The gap is obvious from the feature list." | gap_opportunity.py must score it; an eyeballed gap has no evidence tier. |
 | "We already know who the competitors are." | Still run the SERP scrape — the real competitors are whoever ranks, not who you expect. |
+| "Users obviously hate typing times in." | A pain point without a verbatim quote + URL + date is an opinion. Mine Reddit/reviews/PAA and ledger it (Pillar 11), or mark it reasoned and keep it out of exploits. |
+| "Ergonomics is subjective, can't measure it." | Count it: interactions_to_result (every keystroke + tap + select) for the canonical job, per competitor, desktop and mobile. A number or it is not in the brief (Pillar 6). |
+| "They lack FAQPage/HowTo — easy rich-result win." | Rich-result value is time-boxed. Verify the type against Google's CURRENT supported list (≤60 days) — FAQ rich results died May 2026, HowTo Sept 2023. Parity ≠ exploit. |
 
 ## Red flags — you are rationalizing, start over
 
@@ -194,6 +203,8 @@ Do not read `audit-workflow.js` into context to study it — execute it.
 - You skipped the SERP scrape and assumed competitors from memory -> back to Stage 1.
 - The source ledger has fewer entries than claims in the brief -> audit the brief against the ledger; back to Stage 7.
 - You have exploits but no named pillar targets with competitor baselines -> Stage 8 handoff is incomplete.
+- An exploit claims a UX/ergonomics win with no interactions_to_result counts and no Pillar-11 ledger quotes -> back to Stage 3.
+- A schema exploit names a rich-result type you did not verify against Google's current supported list (≤60 days) -> re-verify or reframe as parity; back to Stage 5.
 
 ## Reference files
 

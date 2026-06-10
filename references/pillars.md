@@ -1,6 +1,6 @@
-# Measurement pillars — the 10 pillars
+# Measurement pillars — the 11 pillars
 
-Every analyzed competitor is scored on all 10 pillars. Fields listed here feed the scripts directly;
+Every analyzed competitor is scored on all 11 pillars. Fields listed here feed the scripts directly;
 `references/scoring-model.md` documents how each field maps to a sub-score.
 
 ✦ = blind spot in the prior time-card-calculator brief (no data was collected here).
@@ -18,6 +18,7 @@ Every analyzed competitor is scored on all 10 pillars. Fields listed here feed t
 9. [Pillar 8 — Accessibility ✦](#pillar-8--accessibility-)
 10. [Pillar 9 — Monetization / ad experience](#pillar-9--monetization--ad-experience)
 11. [Pillar 10 — Mobile experience ✦](#pillar-10--mobile-experience-)
+12. [Pillar 11 — Voice-of-customer pain points ✦](#pillar-11--voice-of-customer-pain-points-)
 
 ---
 
@@ -97,7 +98,16 @@ Additional fields captured for the brief (not in strength formula):
 its output. `schema_types=[]` is a valid real-measured result (it means no schema found). Never mark schema as
 `UNVERIFIED` and then use it as a committed exploit.
 
-Target types to check: `WebApplication`, `FAQPage`, `HowTo`, `BreadcrumbList`, `SiteNavigationElement`.
+Target types to check: `WebApplication`, `SoftwareApplication`, `FAQPage`, `HowTo`, `BreadcrumbList`, `SiteNavigationElement`.
+
+**Rich-result freshness (IRON):** schema PRESENCE is measured here; rich-result VALUE is time-boxed.
+Before any schema gap becomes an exploit, verify each type against Google's CURRENT supported
+structured-data list (source ≤60 days old). FAQ rich results were removed entirely in May 2026 and
+HowTo in Sept 2023 — competitor absence of these is parity data or AI-answer machine-readability at
+most, never a SERP rich-result exploit. Every schema exploit must state which it targets:
+(a) a currently-supported rich result, or (b) machine-readability/AI-answer parity (allowed, lower
+weight). RED baseline: the 2026-06-09 invoice brief scored a FAQPage/HowTo "SERP rich-result
+eligibility" exploit (gap_opp 81) a month after FAQ rich results died.
 
 ---
 
@@ -131,11 +141,18 @@ Record gated features separately — they affect the competitive wedge.
 |---|---|---|
 | `clicks_to_result` (int ≥ 1) | Open competitor URL; count clicks from landing to seeing a result; default state counts as 0 pre-inputs | real-measured |
 | `trust_signals` (int) | Count distinct trust elements present: about page, author/method attribution, contact page, privacy policy, external review/award, HTTPS lock visible | real-measured |
+| `interactions_to_result` (int) | Count EVERY keystroke + tap/click + select needed to complete the canonical job once (e.g. enter one day's times; fill one invoice line); record desktop AND mobile separately | real-measured |
+| `input_modality_map` (per core field) | For each core input field record the modality: typed-free-text / native picker / dropdown / preset chips / slider / auto-default. Structured data (times, dates, currency, rates) collected via free-text TYPING is a friction signal — users prefer pickers/defaults/accelerators over typing | real-measured |
+
+**IRON LAW (same shape as CWV):** "their UX is clunky" without an `interactions_to_result` count and
+an `input_modality_map` is an opinion. Count it or cut it. The lowest measured
+`interactions_to_result` across competitors becomes the ergonomics baseline our build must beat
+(feeds `prd_seed.input_ergonomics`).
 
 Additional captures for the brief:
 - Desktop screenshot (chrome-devtools `preview_screenshot` or equivalent)
 - Mobile screenshot (after `resize_window` or `emulate` mobile viewport)
-- Input friction notes: default values, placeholder helpfulness, error messages
+- Input friction notes: default values, placeholder helpfulness, error messages, copy-down/duplicate-row accelerators, keyboard shortcuts
 - Layout quality notes
 
 ---
@@ -196,3 +213,26 @@ ARIA landmark coverage, tap target sizing.
 | Mobile CWV | Lighthouse run with mobile preset (already captured in Pillar 7) | real-measured |
 | Mobile SERP rank | Separate SERP capture with mobile user-agent if ranks differ | real-measured |
 | Responsive correctness | Visual inspection of mobile screenshot: overflow, font size, tap targets | real-measured |
+
+---
+
+## Pillar 11 — Voice-of-customer pain points ✦
+
+**Script fields fed:** (none in the strength formula — feeds the brief, gap candidates, and
+`prd_seed.pain_points`; same pattern as Pillars 3 and 9)
+
+| Measured field | How to measure (free-first) | Evidence tier |
+|---|---|---|
+| `pain_points[]` ({quote, url, date_accessed, source_type, frequency_signal}) | Mine Reddit/HN/forums (`site:reddit.com <tool type> annoying OR hate OR tedious OR "wish it"`), 1–3★ app-store / Chrome-store reviews of the SaaS rivals, PAA questions phrased as complaints. Copy quotes VERBATIM with URL + date_accessed into the ledger | real-measured (the quote is real; the generalization is `triangulated` only at ≥3 independent sources) |
+| `input_ergonomics_complaints` (subset) | Complaints about HOW data is entered — typing times/dates on mobile keyboards, no defaults, re-entering repeated values, no copy-down, no templates. These map directly to Pillar 6 `interactions_to_result` / `input_modality_map` baselines | real-measured |
+| `unmet_jtbd[]` | Jobs users describe that NO audited competitor serves (from the same mining) | triangulated |
+
+**IRON LAW (same shape as CWV/schema):** "users hate X" without a verbatim quote + URL +
+date_accessed is an opinion — it may enter the brief only as `reasoned`, never as an exploit. A pain
+point becomes a committed exploit ONLY when (a) ≥3 independent sources express it AND (b) the
+Pillar 5/6 audit confirms the top competitors measurably fail it.
+
+**Why this pillar exists (RED baseline):** the 2026-06 time-card brief collected zero
+input-ergonomics or voice-of-customer data; the decisive v1 requirement (R7 — low-friction time
+entry: native picker + accelerators, ≤15 interactions/week) was added only by a human brainstorm
+AFTER the PRD was stamped FINAL. This pillar makes that catch systematic instead of lucky.

@@ -26,7 +26,7 @@ export const meta = {
   ],
 }
 
-const A = args || {}
+const A = (typeof args === 'string' ? JSON.parse(args) : args) || {}
 const HUB = A.hub || 'the chosen hub'
 const DATA_MODE = A.dataMode || 'hybrid'
 const SKILL_DIR = A.skillDir || ".claude/skills/pick-next-tool"  // pass args.skillDir (abs path); this relative default assumes cwd = project root

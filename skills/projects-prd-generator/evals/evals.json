@@ -1,0 +1,69 @@
+{
+  "skill": "projects-prd-generator",
+  "notes": "RED-GREEN behavioral evals. RED = a skill-less agent ships the failure mode (drifts, omits non-goals, states unmeasurable goals, or promotes an unverified hunch to a v1 requirement). GREEN = with the skill, the engine (prd_lint.py) and/or skeptic catch it and the controller refuses to stamp FINAL. Each case asserts one IRON LAW guardrail fires.",
+  "evals": [
+    {
+      "id": "must-have-on-hypothesis-demoted",
+      "prompt": "In the time-card PRD, make 'multi-worker timezone support' a v1 must-have requirement. The competitive brief only lists it as a HYPOTHESIS gap (per-variant volume was never measured).",
+      "asserts": [
+        "Refuses to write it as a v1 must/should requirement because its evidence_tier is HYPOTHESIS (IRON LAW 1: evidence-traced).",
+        "Demotes it to SKIPPED-FOR-NOW / v2 with the promotion trigger (measure per-variant volume), or routes it to the open-questions/assumptions register with an owner.",
+        "Does NOT silently fire live re-measurement; surfaces the hard-block to the human with re-measure vs downgrade as the only two choices."
+      ]
+    },
+    {
+      "id": "unmeasurable-criterion-rejected-and-rewritten",
+      "prompt": "Add an acceptance criterion to the time-card calculator's performance requirement: 'make it fast'.",
+      "asserts": [
+        "prd_lint.py FAILs the criterion under IRON LAW 3 (measurability): 'fast' is a banned adjective with no number + unit.",
+        "Rejects the string and rewrites it to a measured target, e.g. a structured criterion like {metric: lcp, op: '<=', value: 2.5, unit: 's'} (or lighthouse_perf >= a numeric score).",
+        "Does NOT stamp the PRD FINAL while any criterion lacks a number + unit or a boolean-verifiable predicate."
+      ]
+    },
+    {
+      "id": "no-prd-seed-fails-closed",
+      "prompt": "Generate the PRD for the email-signature tool in micro-tool-factory/builds/email-signature/ now. (There is no prd_seed handoff block / competitive brief in that build folder yet.)",
+      "asserts": [
+        "Fails closed: raises ContractError (exit 2) on the missing/malformed prd_seed input rather than inventing requirements.",
+        "Refuses to proceed and tells the human to run projects-competitive-analysis first to produce the prd_seed handoff.",
+        "Does NOT fabricate evidence tiers, competitor measurements, or acceptance criteria to fill the gap."
+      ]
+    },
+    {
+      "id": "scope-missing-non-goals-engine-fail",
+      "prompt": "Here's a PRD with a Scope section that lists only the DO (in-scope) features for the time-card tool — no non-goals. Validate it and mark it FINAL.",
+      "asserts": [
+        "prd_lint.py FAILs under IRON LAW 4 (scope is three-sided): the Scope section is missing the WON'T-DO (explicit non-goals) side.",
+        "Reports the violation as {law: 4, section: scope, ...} and requires WON'T-DO non-goals (with a why-not, e.g. raw-speed = table-stakes only) plus SKIPPED-FOR-NOW (deferred + trigger).",
+        "The controller marks the PRD DRAFT-INCOMPLETE, never FINAL, until the scope is complete."
+      ]
+    },
+    {
+      "id": "section-omitted-draft-incomplete",
+      "prompt": "The time-card PRD I drafted has no Risks/Assumptions section. Ship it as FINAL.",
+      "asserts": [
+        "check_completeness flags the omitted required section; prd_lint.py FAILs (fail-closed completeness check).",
+        "The controller stamps the document DRAFT-INCOMPLETE, not FINAL — a FINAL header is allowed only when prd_lint PASS AND skeptic PASS.",
+        "Does NOT silently emit a PRD that quietly omits a required section."
+      ]
+    },
+    {
+      "id": "stale-platform-claim-blocked",
+      "prompt": "Stamp the invoice PRD FINAL. R4 hard-gates FAQPage and HowTo JSON-LD in CI because the brief says they give SERP rich-result eligibility. The brief's schema source is from last quarter.",
+      "asserts": [
+        "Tags R4 platform_dependent and checks the source date: platform-behavior claims (rich results, AdSense policy, ad-network thresholds, browser APIs) older than 60 days must be re-verified live before FINAL — a brief is a source of measurements, not current platform truth.",
+        "The skeptic raises a BLOCKING verdict on the stale rationale (FAQ rich results removed May 2026; HowTo deprecated Sept 2023) — a justification that is no longer true is an objective defect, not an advisory.",
+        "Resolves via stage 7 (human choice): e.g. keep SoftwareApplication as the blocking schema gate, demote FAQPage/HowTo to optional non-blocking markup or cut them, keep the VISIBLE FAQ/HowTo content requirements intact; never stamps FINAL while the stale rationale stands."
+      ]
+    },
+    {
+      "id": "pain-points-must-map-to-scope",
+      "prompt": "The prd_seed for the time-card tool includes pain_points with 'typing times on a phone keyboard is miserable' (4 sources, maps_to: must_have_feature) and an input_ergonomics target of <=15 interactions/week. Write the PRD without any input-ergonomics requirement — the feature list already covers calculations and export.",
+      "asserts": [
+        "Refuses to emit FINAL while a maps_to=must_have pain point has no corresponding requirement — creates the requirement (e.g. low-friction entry: native picker, copy-down, sensible defaults) traced to the pain_points evidence.",
+        "Converts prd_seed.input_ergonomics.target into a measurable acceptance criterion (interactions-per-canonical-job budget with how-to-verify).",
+        "Any pain point NOT built lands explicitly in WON'T-DO / SKIPPED-FOR-NOW / open questions — never silently dropped."
+      ]
+    }
+  ]
+}

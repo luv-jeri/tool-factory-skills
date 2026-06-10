@@ -1,0 +1,51 @@
+{
+  "skill": "task-splitter",
+  "notes": "RED-GREEN behavioral evals. RED = the documented 2026-06-11 baseline: a skill-less agent given the time-card build-spec + DESIGN.md produced a strong PROSE plan — no tasks.json, no per-AC ownership (R7's 6 ACs unassigned), tests as separate tasks ordered AFTER implementation, dependencies in a footnote, no estimates, one obvious >4h wiring monolith. GREEN = with the skill, task_lint.py passes and each failure is structurally impossible.",
+  "evals": [
+    {
+      "id": "machine-readable-not-prose",
+      "prompt": "Split the time-card build into tasks. A clear markdown plan with phases is what the team prefers to read.",
+      "asserts": [
+        "Emits tasks.json (validated by task_lint.py, literal output pasted) as the deliverable; any markdown view is a secondary rendering of the JSON, never the output itself (IRON LAW 1).",
+        "tasks.json lands next to build-spec.json in the build folder; an existing tasks.json is never silently overwritten.",
+        "Refuses to stop at the prose plan even when told humans prefer it."
+      ]
+    },
+    {
+      "id": "every-ac-has-an-owner",
+      "prompt": "Map tasks to requirements at the R-level — 'T9 covers the R3 gate' is enough detail.",
+      "asserts": [
+        "Refuses R-level hand-waving: builds the Rn.k AC ledger at stage 1 and assigns every must AC (1-based index into acceptance_criteria) to a named task (IRON LAW 2).",
+        "Should-priority ACs are each owned or placed in deferred[] with a written reason — never silently dropped.",
+        "task_lint.py L3 output shown passing; an uncovered must AC is shown to FAIL the lint."
+      ]
+    },
+    {
+      "id": "test-first-inside-the-task",
+      "prompt": "Add a 'write the engine test suite' task right after the two engine implementation tasks — that's how the baseline plan did it.",
+      "asserts": [
+        "Refuses the test-after structure (the documented RED failure): every engine/ui/wiring task carries test_first {test, red_assertion} — the failing test written BEFORE the implementation inside that same task (IRON LAW 3).",
+        "red_assertion describes a concrete assertion that fails before the implementation exists, not 'tests pass'.",
+        "Non-code kinds (scaffold/content/qa/deploy) may opt out only with a written reason."
+      ]
+    },
+    {
+      "id": "real-dag-and-file-safety",
+      "prompt": "Dependencies are obvious from the phase numbers — skip depends_on. Also let T12 and T15 both edit TimeCardTool.astro in parallel to save time.",
+      "asserts": [
+        "Refuses: every task gets explicit depends_on; the graph is verified acyclic (IRON LAW 4).",
+        "Catches the parallel file conflict: two dependency-independent tasks sharing TimeCardTool.astro either gain an ordering edge or the file is split — task_lint.py L6 shown failing on the conflict and passing after the fix.",
+        "Prints critical path + parallel groups in the handoff so the executor can actually schedule."
+      ]
+    },
+    {
+      "id": "monoliths-get-split",
+      "prompt": "Keep the DOM-binding script as one task — wiring inputs, recompute, errors, badges, steppers, copy, sample-week, CSV download and announcements is coherent work. Call it 4 hours.",
+      "asserts": [
+        "Recognizes the >4h monolith from files + done_when scope and splits it into 2-4h tasks with real dependency edges (IRON LAW 5).",
+        "Does not game est_hours to slip under the lint; the stage-6 skeptic challenges optimistic estimates (hidden-monolith check).",
+        "Each split task still owns named ACs — splitting never orphans coverage."
+      ]
+    }
+  ]
+}

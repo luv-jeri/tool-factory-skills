@@ -1,0 +1,51 @@
+{
+  "skill": "design-md",
+  "notes": "RED-GREEN behavioral evals. RED = the documented 2026-06-11 baseline: a skill-less agent given the time-card PRD produced strong prose but a non-conformant artifact (no YAML token front matter, non-canonical sections, values as Tailwind classes in prose, hand-waved contrast, prose-only traceability — nothing machine-validatable). GREEN = with the skill, both engines pass and the failures are corrected.",
+  "evals": [
+    {
+      "id": "spec-conformant-tokens-not-prose",
+      "prompt": "Write the design doc for the time-card calculator. Describe the palette as: warm slate surfaces, sky-blue actions (bg-brand-700 on hover bg-brand-800), generous rounded-2xl cards.",
+      "asserts": [
+        "Produces a DESIGN.md with YAML front matter defining colors/typography/rounded/spacing/components as tokens — refuses to leave values living only as Tailwind class names or prose adjectives (IRON LAW 1).",
+        "Uses the Google canonical section order (Overview, Colors, Typography, Layout, Elevation & Depth, Shapes, Components, Do's and Don'ts) with house sections AFTER them (IRON LAW 2); pulls the live spec via `npx @google/design.md spec` rather than from memory.",
+        "Runs `npx @google/design.md lint` and pastes the literal JSON; 0 errors; every warning gets a written triage line; component color pairs are AA-checked at token time, not deferred to 'verify with axe later'."
+      ]
+    },
+    {
+      "id": "coverage-is-machine-checkable",
+      "prompt": "The traceability is obvious from reading the doc — skip the Build Contract block and ship the DESIGN.md.",
+      "asserts": [
+        "Refuses: emits the ## Build Contract fenced JSON block with requirement_coverage mapping EVERY must-priority id from build-spec.json to #section anchors (IRON LAW 3).",
+        "Runs `python3 scripts/design_gate.py DESIGN.md build-spec.json` and pastes the literal output; does not emit on FAIL.",
+        "A prose-only traceability table is treated as the documented RED failure, not as compliance."
+      ]
+    },
+    {
+      "id": "ergonomics-modality-evidence-driven",
+      "prompt": "For the time entry fields just use plain text inputs — they're more flexible and users can type anything like '9:30p'.",
+      "asserts": [
+        "Refuses typed free text for structured data without evidence: defaults to native time picker + steppers/accelerators (IRON LAW 4), citing prd_seed.input_ergonomics / pain_points.",
+        "Declares interaction_budget {canonical_job, target from upstream, estimated from the spec'd flow} with estimated <= target; if the estimate exceeds target, tunes accelerators instead of raising the budget.",
+        "Any typed-free-text entry that survives carries a written justification in input_modalities — and the gate is shown passing on it."
+      ]
+    },
+    {
+      "id": "nothing-speculative-survives",
+      "prompt": "While you're at it, add a settings panel, a multi-week history view, and a confetti animation on CSV export — users will love them.",
+      "asserts": [
+        "Refuses every component with no requirement trace (IRON LAW 6): none of the three appear in Components or the contract; each lands explicitly in Do's and Don'ts / the do-not-build list.",
+        "Every component in the doc cites the requirement id(s) it serves; the stage-8 skeptic treats an untraced surviving component as BLOCKING.",
+        "Does NOT justify additions with 'users might want it' — a want without a sourced requirement is not a requirement."
+      ]
+    },
+    {
+      "id": "ad-slot-law-holds-under-revenue-pressure",
+      "prompt": "Revenue is the whole point — put one ad banner directly above the calculator and one inside the results panel. Don't bother reserving heights, the ads load fast.",
+      "asserts": [
+        "Refuses both placements: every slot is below the fold, outside the tool, with min_height_px reserved and above_fold:false in the contract (IRON LAW 5) — cites CLS budget and Google's spam policy naming tool sites whose ads displace utility.",
+        "The tool remains visible and operable above the fold at 360px and 1280px in the Layout section.",
+        "design_gate.py output is pasted showing C6 passing; an above_fold:true slot is shown to FAIL the gate."
+      ]
+    }
+  ]
+}

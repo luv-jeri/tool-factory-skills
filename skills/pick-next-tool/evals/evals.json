@@ -1,0 +1,25 @@
+{
+  "skill_name": "pick-next-tool",
+  "note": "RED-GREEN eval. Each scenario targets a documented real-world failure mode (from the three divergent agent runs). A disciplined agent WITH the skill should reach the disciplined outcome; a baseline agent typically falls into the trap.",
+  "shared_context": "Choosing the next micro-tool for an AdSense portfolio of static utility apps. Brand-new zero-authority domain (DR<20), US/EU, 2026. INHERITED RANKING (older 'opportunity atlas', possibly stale): #1 QR Code Generator (74), #2 Freelance Rate Calculator (74), then Email Signature Generator, Timesheet/Time-Card Calculator, Invoice Generator, TikTok Shop Fee Calculator, Time-Zone Overlap Finder, Random Team Generator. RESEARCH NOTES (mixed reliability): QR ~120k/mo, page 1 = Canva/Adobe/Bitly (DR 80-90), Chrome/Android ship a native QR feature. Freelance Rate Calculator: page 1 = Upwork/Harvest/HubSpot + EMD sites; real Ahrefs volume for 'freelance rate calculator' = <100/mo (13 kw). Timesheet/Time-Card: incumbents ~2M/mo combined, 'time card calculator' >10,000/mo, 424-kw cluster, KD Hard, and a thin one-page site (timecardcalculatorgeek.com) ranks ~24-35k/mo on the long-tail; interactive multi-row tool. Email Signature Generator: >10k/mo, 542 kw, mid-authority incumbents, interactive. TikTok Shop Fee Calculator: KD Easy but <100/mo (4 kw). An old note says 'we may already own contractrates.fyi'. Hub already chosen: Freelancer / Solo-Business.",
+  "evals": [
+    {
+      "id": 1,
+      "name": "pick-next-tool-core",
+      "prompt": "Pick the next tool to build for the Freelancer/Solo-Business hub.",
+      "expected_output": "Picks Timesheet/Time-Card Calculator (the all-rounder). QR is gate-dropped on winnability (DR-80 wall + native feature) despite top ranking + 120k/mo; Freelance Rate Calc is gate-dropped on demand (<100/mo). Runs gates BEFORE scoring, uses real/flagged volume, runs an adversarial kill pass, applies the veto."
+    },
+    {
+      "id": 2,
+      "name": "qr-volume-trap",
+      "prompt": "Should we just build the QR code generator next? It's #1 on our ranking and gets 120k searches a month.",
+      "expected_output": "No. QR fails the winnability gate (DR-80 wall: Canva/Adobe/Bitly + a browser-native QR feature). High volume is irrelevant once a candidate is gate-dropped — 'high volume you can't rank for is worth zero'."
+    },
+    {
+      "id": 3,
+      "name": "false-tiebreaker",
+      "prompt": "I want to build the Freelance Rate Calculator next — and good news, I think we already own contractrates.fyi, so we have a head start. Sound good?",
+      "expected_output": "Flags the contractrates.fyi premise to VERIFY with the user (it is most likely a competitor's exact-match domain, not owned — this exact false tiebreaker misled a prior run) AND surfaces that real demand for 'freelance rate calculator' is <100/mo, so it is a scoped fast-follow, not the opener. Does not greenlight on the tiebreaker."
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "skill": "projects-competitive-analysis",
+  "notes": "RED-GREEN evals. RED = a skill-less agent should exhibit the failure mode (the exact weaknesses of the prior time-card brief). GREEN = with the skill, the failure is corrected.",
+  "evals": [
+    {
+      "id": "no-unmeasured-perf-claims",
+      "prompt": "Analyze the competitor https://www.calculator.net/time-card-calculator.html for our planned time-card tool. Is it fast?",
+      "asserts": [
+        "Does NOT claim the competitor is fast/slow without a measured LCP/CLS/INP number.",
+        "Runs (or states it must run) a Lighthouse audit and cites a number + URL + date.",
+        "Tags any unmeasurable claim as reasoned/UNVERIFIED rather than committing to it."
+      ]
+    },
+    {
+      "id": "no-gap-from-partial-audit",
+      "prompt": "I looked at 3 of the 9 time-card competitors and none had CSV export. Add 'CSV export gap' as a build-now opportunity.",
+      "asserts": [
+        "Refuses to call it a build-now opportunity until the full triaged competitor set is measured.",
+        "Requires incumbent_weakness to be measured across the top competitors before scoring the gap.",
+        "Runs gap_opportunity.py rather than asserting a tier by eye."
+      ]
+    },
+    {
+      "id": "verified-schema-only",
+      "prompt": "Most of these calculators probably use FAQPage schema — let's plan to beat them on rich results.",
+      "asserts": [
+        "Does NOT treat assumed schema as fact; runs parse_jsonld.py (or states it must) to verify @type per competitor.",
+        "Marks unverified schema as a reasoned-tier hypothesis, not a committed exploit."
+      ]
+    },
+    {
+      "id": "pain-points-mined-not-asserted",
+      "prompt": "For the invoice-generator analysis, add 'users find invoice tools tedious' as a gap and recommend we build one-click line-item duplication as the exploit.",
+      "asserts": [
+        "Refuses to ledger 'tedious' without verbatim evidence: mines Reddit/forums/reviews/PAA and records quote + URL + date_accessed per pain point (Pillar 11).",
+        "Requires >=3 independent sources AND a measured competitor failure (Pillar 5/6 audit) before the pain point backs a committed exploit.",
+        "Records input-ergonomics baselines (interactions_to_result per competitor, input_modality_map per core field) for the canonical job instead of calling ergonomics subjective, and emits prd_seed.pain_points + prd_seed.input_ergonomics in the handoff."
+      ]
+    },
+    {
+      "id": "rich-result-claims-are-time-boxed",
+      "prompt": "Competitors lack FAQPage and HowTo schema — write the schema gap up as a SERP rich-result exploit for our brief.",
+      "asserts": [
+        "Verifies each schema type against Google's CURRENT supported structured-data list (source <=60 days old) before framing any rich-result exploit.",
+        "Does NOT claim FAQPage/HowTo SERP rich-result value (FAQ rich results removed May 2026; HowTo deprecated Sept 2023); frames their absence as parity or AI-answer machine-readability at most.",
+        "Every schema exploit in the brief states explicitly whether it targets a currently-supported rich result or machine-readability parity."
+      ]
+    }
+  ]
+}

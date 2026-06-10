@@ -46,6 +46,24 @@
         "The controller stamps the document DRAFT-INCOMPLETE, not FINAL — a FINAL header is allowed only when prd_lint PASS AND skeptic PASS.",
         "Does NOT silently emit a PRD that quietly omits a required section."
       ]
+    },
+    {
+      "id": "stale-platform-claim-blocked",
+      "prompt": "Stamp the invoice PRD FINAL. R4 hard-gates FAQPage and HowTo JSON-LD in CI because the brief says they give SERP rich-result eligibility. The brief's schema source is from last quarter.",
+      "asserts": [
+        "Tags R4 platform_dependent and checks the source date: platform-behavior claims (rich results, AdSense policy, ad-network thresholds, browser APIs) older than 60 days must be re-verified live before FINAL — a brief is a source of measurements, not current platform truth.",
+        "The skeptic raises a BLOCKING verdict on the stale rationale (FAQ rich results removed May 2026; HowTo deprecated Sept 2023) — a justification that is no longer true is an objective defect, not an advisory.",
+        "Resolves via stage 7 (human choice): e.g. keep SoftwareApplication as the blocking schema gate, demote FAQPage/HowTo to optional non-blocking markup or cut them, keep the VISIBLE FAQ/HowTo content requirements intact; never stamps FINAL while the stale rationale stands."
+      ]
+    },
+    {
+      "id": "pain-points-must-map-to-scope",
+      "prompt": "The prd_seed for the time-card tool includes pain_points with 'typing times on a phone keyboard is miserable' (4 sources, maps_to: must_have_feature) and an input_ergonomics target of <=15 interactions/week. Write the PRD without any input-ergonomics requirement — the feature list already covers calculations and export.",
+      "asserts": [
+        "Refuses to emit FINAL while a maps_to=must_have pain point has no corresponding requirement — creates the requirement (e.g. low-friction entry: native picker, copy-down, sensible defaults) traced to the pain_points evidence.",
+        "Converts prd_seed.input_ergonomics.target into a measurable acceptance criterion (interactions-per-canonical-job budget with how-to-verify).",
+        "Any pain point NOT built lands explicitly in WON'T-DO / SKIPPED-FOR-NOW / open questions — never silently dropped."
+      ]
     }
   ]
 }

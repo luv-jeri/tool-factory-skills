@@ -106,6 +106,16 @@ Announce: **"Using projects-prd-generator to write the PRD for [tool]."** Create
    (WCAG level + Lighthouse score); SEO / schema targets; monetization ceiling;
    north-star goal + success metrics; measurable acceptance criteria, each with
    the competitor baseline to beat or match.
+   PLATFORM-REALITY CHECK: any requirement whose value depends on third-party
+   platform behavior (search-engine rich results, AdSense policy, ad-network
+   thresholds, browser APIs) is tagged platform_dependent and must cite a source
+   dated <=60 days OR be re-verified live before FINAL — an upstream brief is a
+   source of MEASUREMENTS, not a source of current platform truth.
+   PAIN-POINT COVERAGE: every prd_seed.pain_points entry with maps_to=must_have
+   resolves to a requirement; every other pain point appears in WON'T-DO,
+   SKIPPED-FOR-NOW, or the open-questions register. The prd_seed.input_ergonomics
+   target becomes a measurable acceptance criterion (e.g. interactions-per-job
+   budget) on the relevant requirement.
 
 4. Assemble — fill references/prd-template.md (14 sections); produce the machine
    build-spec.json + build-spec.yaml as a literal projection of the records.
@@ -114,7 +124,10 @@ Announce: **"Using projects-prd-generator to write the PRD for [tool]."** Create
    Fail-closed. Paste the literal PASS/FAIL + violation list. No FINAL on FAIL.
 
 6. Adversarial kill (skeptic) — invoke scripts/prd-skeptic-workflow.js via the
-   Workflow tool; it challenges every requirement, criterion, and non-goal and
+   Workflow tool; it challenges every requirement, criterion, and non-goal —
+   including every platform_dependent claim's source date (a stale platform
+   claim, e.g. a requirement justified by a rich-result type the search engine
+   no longer supports, is an OBJECTIVE defect → BLOCKING) — and
    returns blocking vs advisory verdicts. BLOCKING is an OBJECTIVE defect — not
    traceable, not measurable, wrong scope, or an internal contradiction — and
    bounces back to stages 1-3. ADVISORY (a flag or demote raised only for a
@@ -176,6 +189,8 @@ Full template: `references/prd-template.md`. The engine's `REQUIRED_SECTIONS` mu
 | "It reads complete to me." | A "complete" stamp without prd_lint PASS + skeptic PASS is a skill failure (IRON LAW 6). |
 | "The open question is minor, I'll drop it." | Quarantine it in the register with an owner — dropping it hides risk. |
 | "I'll just hand-write the build-spec to match." | The build-spec is a literal projection of the records; `check_agreement` fails on drift. |
+| "The brief sourced it, so the requirement is sound." | A brief sources MEASUREMENTS; platform behavior moves. Rich results, AdSense policy, network thresholds need a <=60-day source or a live re-check — the invoice PRD hard-gated FAQPage/HowTo "rich-result eligibility" a month after Google removed FAQ rich results. |
+| "Pain points are the brief's job, not the PRD's." | Unmapped pain points are silent scope gaps — the time-card PRD shipped FINAL missing the decisive ergonomics requirement (R7) until a human caught it. Every prd_seed.pain_points entry lands in DO / WON'T-DO / SKIPPED / open questions. |
 
 ## Red flags — you are rationalizing, start over
 
@@ -185,6 +200,8 @@ Full template: `references/prd-template.md`. The engine's `REQUIRED_SECTIONS` mu
 - You stamped FINAL without pasting prd_lint PASS and the skeptic result -> back to stages 5-6.
 - The PRD requirement ids do not match build-spec ids -> reconcile; the engine will fail closed.
 - No prd_seed in the build folder -> stop; run projects-competitive-analysis first.
+- A platform_dependent requirement cites a source older than 60 days (or none) -> re-verify the platform behavior live; back to stage 3.
+- prd_seed.pain_points exists and any entry is absent from DO / WON'T-DO / SKIPPED / open questions -> back to stage 2.
 
 ## Reference files
 

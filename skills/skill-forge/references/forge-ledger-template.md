@@ -44,6 +44,12 @@ Rules the gate enforces (F6):
 - The forge finishes at `ready-for-review` with NO `review` block. Writing your own
   review is the self-approval the gate exists to refuse.
 
+Bootstrapping note (self_gate and engine_selftest evidence): these excerpts cannot
+exist before their commands have run. The sequence is — write a short placeholder,
+run the command, iterate until it passes, then replace the placeholder with the
+literal passing output. The gate only ever sees the final state, so a placeholder
+during the build is fine; shipping one is not.
+
 ## Worked micro-example (mid-build, stage 5 of widget-gate)
 
 ```json

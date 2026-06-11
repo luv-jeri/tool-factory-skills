@@ -22,10 +22,14 @@
   ],
   "triggers": {
     "should_trigger": [
-      "{{REALISTIC_QUERY_THAT_NEEDS_THIS_SKILL}}"
+      "{{REALISTIC_QUERY_THAT_NEEDS_THIS_SKILL}}",
+      "{{SECOND_TRIGGER_QUERY}}",
+      "{{THIRD_TRIGGER_QUERY — keep adding until you have 6+}}"
     ],
     "should_not_trigger": [
-      "{{NEAR_MISS_QUERY_THAT_LOOKS_SIMILAR_BUT_IS_NOT_THIS_SKILL}}"
+      "{{NEAR_MISS_QUERY_THAT_LOOKS_SIMILAR_BUT_IS_NOT_THIS_SKILL}}",
+      "{{SECOND_NEAR_MISS}}",
+      "{{THIRD_NEAR_MISS — keep adding until you have 6+}}"
     ]
   }
 }

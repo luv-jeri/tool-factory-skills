@@ -35,7 +35,10 @@ import sys
 import tempfile
 
 LAW_HEADING_RE = re.compile(r"^#{1,3}\s*IRON LAWS\s*$", re.IGNORECASE | re.MULTILINE)
-LAW_NUM_RE = re.compile(r"^\s*(\d+)\.\s+\S", re.MULTILINE)
+# law numbers are 1-2 digits: a wrapped prose line starting with a year
+# ("2023. Including...") must not read as a law number (hit live by the
+# seo-content forge, which saw laws [1..6, 2023])
+LAW_NUM_RE = re.compile(r"^\s*(\d{1,2})\.\s+\S", re.MULTILINE)
 NAME_RE = re.compile(r"^[a-z0-9][a-z0-9-]{1,63}$")
 SELFTEST_RE = re.compile(
     r"SELFTEST RESULT: PASS \((\d+) good, (\d+) bad, (\d+) invariant\)"
@@ -398,7 +401,8 @@ digraph when {{ a -> b; }}
 
 ```
 1. NO WIDGET WITHOUT A FAILING CHECK FIRST — capture the red.
-2. THE LEDGER IS THE BUILD — paste literal output.
+2. THE LEDGER IS THE BUILD — paste literal output. HowTo rich results died in September
+2023. Wrapped lines starting with a year must not be read as law numbers.
 3. DECLARED FILES ONLY — justify extras.
 4. NEVER WEAKEN A CHECK — block instead.
 ```

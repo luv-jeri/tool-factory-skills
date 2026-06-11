@@ -17,7 +17,9 @@ Slot-filling rules (read before you start):
 - **{{LAW_n}}** — 4 to 8 laws. Each law is: NAME IN CAPS — then 2-4 sentences of what it
   forbids/requires and WHY (the why is what stops rationalization). Order laws by how
   often the baseline violated them. Every law must trace to a `law_origins` entry in
-  your forge-ledger.json.
+  your forge-ledger.json. Inside the IRON LAWS block, never let a wrapped line START
+  with a bare 1-2 digit number followed by a period ("8. " mid-sentence reads as a law
+  number to the gate); reword or re-wrap the sentence.
 - **{{BASELINE_FAILURE_SUMMARY}}** — 2-4 sentences quoting the worst of your RED
   baseline. Specific numbers and verbatim phrases beat adjectives.
 - **Rationalization rows** — one row per excuse your baseline agent actually used or

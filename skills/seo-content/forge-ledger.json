@@ -1,0 +1,156 @@
+{
+  "skill": "seo-content",
+  "status": "approved",
+  "stages": {
+    "baseline": {
+      "status": "done",
+      "evidence": "Skill-less haiku run 2026-06-11, output at /Users/sanjaykumar/Claude/Projects/Online Web Apps/_scratch/red-baseline-seo-content/. Verbatim failures extracted from the files:\n\nFrom SEO_CHECKLIST.md line 17: '- [x] **FAQPage Schema** - 8 Q&A items - improves rich snippet eligibility for FAQ-style searches'\nFrom SEO_CHECKLIST.md line 193: '✓ **Structured Data**: Organization + WebApplication + FAQPage schema = 3 rich snippet opportunities'\nFrom index.html line 79: '@type: FAQPage' JSON-LD block with 10 Q&A pairs present.\nFrom README.md line 103: '3. **FAQPage Schema** - 10 Q&A pairs for rich snippet eligibility'\nFrom DELIVERABLES.txt line 291: 'Approval likelihood: HIGH'\nFrom DELIVERABLES.txt line 265: '✓ Original, high-quality content (2,040+ words, not scraped)'\nFrom README.md line 90: '- **Content length:** 2,040+ words (main page)' — self-reported, no gate run.\nFrom README.md line 5: 'This is a complete, production-ready SEO content package'\nFiles delivered: README.md (12.0 KB), SEO_CHECKLIST.md (9.1 KB), CONTENT_STRATEGY.md (11.5 KB), DEPLOYMENT_GUIDE.md (11.1 KB), og-image-spec.md (4.7 KB), DELIVERABLES.txt (11.2 KB) — 6 unrequested documents.\nInternal links in index.html: /privacy-policy.html, /terms-of-service.html, /contact.html — all legal pages, zero cluster links.\nAttestation: none present. No human review recorded anywhere."
+    },
+    "engine_selftest": {
+      "status": "done",
+      "evidence": "$ python3 scripts/seo_content_gate.py --selftest\nSEO CONTENT GATE: PASS (C1-C6 all green)\n[... 9 bad fixtures each showing FAIL output ...]\nSELFTEST RESULT: PASS (1 good, 9 bad, 1 invariant)\nexit 0\n\nBad fixture coverage: bad-C1 refused (word count 48 < 600), bad-C2 refused (FAQPage JSON-LD), bad-C2b refused (HowTo JSON-LD), bad-C3 refused (0 visible questions), bad-C4 refused (meta desc 12 chars, og tags missing), bad-C5 refused (0 cluster links, 3 legal-only links), bad-C6 refused (reviewer='agent'), bad-C6b refused (confirmed=false), bad-C6c refused (empty reviewer). Invariant: removing visible FAQ section from good fixture flips to FAIL (C1+C3).\n\nREWORK 2026-06-11: engine hardened per reviewer findings. New selftest output:\n$ python3 scripts/seo_content_gate.py --selftest\nSELFTEST RESULT: PASS (1 good, 15 bad, 1 invariant)\nexit 0\n\nAdded fixtures: bad-C2c (FAQPage array @type), bad-C2d (HowTo array @type), bad-C3a (no FAQ section, old bad-C3 renamed), bad-C3b (>= 600 words, 3 scattered questions, no FAQ heading — only C3 fires), bad-C5a (legal <a> links only, old bad-C5 renamed), bad-C5b (stylesheet/preload <link> hrefs only, zero <a> cluster links), bad-C6d (reviewer='ChatGPT'), bad-C6e (reviewer='Claude Fable agent run'). C2 now matches FAQPage/HowTo tokens anywhere inside ld+json block body (catches array form). C3 now additionally requires FAQ-style heading ('FAQ', 'Frequently Asked', or 'Common Questions') in visible text. C5 now extracts hrefs from <a> tags only. C6 now uses token-wise matching; AGENT_IDENTITIES extended with chatgpt, gpt, bot, llm, copilot, gemini."
+    },
+    "skill_md": {
+      "status": "done",
+      "evidence": "Filled skill-md-template.md: name=seo-content matches directory; description starts 'Use when' (triggers: 'write the SEO content for [tool]', 'add the FAQ to the tool page', 'landing page copy is thin or missing', 'content stage before ship'); ends with 'Do not use for writing or editing structured data schemas...'; description is 538 chars < 1024 limit (rework 2026-06-11: corrected from the erroneous 429 — measured by python3 len() directly on the frontmatter description string); third person, no first-person pronouns. IRON LAWS: 6 laws, contiguous 1-6, all traced to law_origins. Overview section quotes verbatim baseline: 'FAQPage Schema: 10 Q&A pairs qualify for rich snippets — 20-30% higher CTR than standard links'. Rationalization table: 6 rows quoting baseline excuses. Red flags: 6 observable states with stage pointers."
+    },
+    "evals": {
+      "status": "done",
+      "evidence": "evals/evals.json: skill='seo-content' matches dir; notes >= 150 chars with 'baseline' present (notes = 1041 chars); 7 evals >= 6 IRON LAWS; all 6 law numbers cited in asserts: Law 1 cited in eval[0] and eval[1], Law 2 cited in eval[2], Law 3 cited in eval[3], Law 4 cited in eval[4], Law 5 cited in eval[5], Law 6 cited in eval[6]; triggers block has 6 should_trigger and 6 should_not_trigger entries; all eval prompts >= 20 chars; all evals have >= 2 asserts."
+    },
+    "self_gate": {
+      "status": "done",
+      "evidence": "$ python3 'skills/skill-forge/scripts/skill_gate.py' 'skills/seo-content'\nSKILL GATE: PASS (6 laws, package + ledger verified)\nexit 0\n\nF1-F7 all green. Layout: only SKILL.md, scripts/, evals/, forge-ledger.json (no sprawl). Frontmatter: name=seo-content, starts 'Use when', 'Do not use for' clause present. Sections: Overview, IRON LAWS 1-6 contiguous, dot digraphs x2, mandatory checklist, rationalization table 6 rows, red flags. Engine: seo_content_gate.py --selftest SELFTEST RESULT: PASS (1 good, 9 bad, 1 invariant). Evals: 7 evals >= 6 laws, all 6 law numbers cited. Ledger: 6 stages done evidence above floor, 6 law_origins. Residue: no unfilled slots.\n\nREWORK 2026-06-11:\n$ python3 '/Users/sanjaykumar/Claude/Projects/Online Web Apps/tool-factory-skills/skills/skill-forge/scripts/skill_gate.py' '/Users/sanjaykumar/Claude/Projects/Online Web Apps/tool-factory-skills/skills/seo-content'\nSKILL GATE: PASS (6 laws, package + ledger verified)\nexit 0"
+    },
+    "green_check": {
+      "status": "done",
+      "evidence": "Fresh haiku subagent run 2026-06-11 with seo-content SKILL.md loaded. Output dir: /Users/sanjaykumar/Claude/Projects/Online Web Apps/_scratch/green-verify-seo-content/. Files produced: index.html (13.7 KB) and attestation.json (438 B) — only 2 files, no README or extra documents (Law 6 holds).\n\nOrchestrator re-ran engine independently:\n$ python3 scripts/seo_content_gate.py .../green-verify-seo-content/index.html .../green-verify-seo-content/attestation.json\nSEO CONTENT GATE: PASS (C1-C6 all green)\nexit 0\n\nPer-law evidence:\nC1 (Law 4): 1329 visible words >= 600 floor — PASS.\nC2 (Law 1): No FAQPage or HowTo JSON-LD present — PASS. Haiku did not include dead schema.\nC3 (Law 2): 6 visible question/answer pairs in plain text FAQ section >= 3 minimum — PASS.\nC4 (Law 4): title='Free Time Card Calculator Online' (32 chars); meta desc 123 chars; og:title and og:description both present — PASS.\nC5 (Law 5): cluster links ['/tools/invoice-generator', '/tools/estimate-calculator'] — 2 qualifying links, no legal-page links counted — PASS.\nC6 (Law 3) REFUSAL EVIDENCE: Orchestrator ran gate with reviewer='agent' attestation:\nFAIL C6: attestation reviewer 'agent' is an agent identity — AdSense scaled-content policy requires a named human reviewer...\nSEO CONTENT GATE: FAIL (1 check(s) failed)\nExit: 1\nThis confirms Law 3 holds — the engine unconditionally refuses agent-only attestations. The green run used reviewer='green-check fixture human' as a test fixture identity only; real shipping requires the actual human pass.\nLaw 6 holds: haiku delivered index.html and attestation.json only; zero unrequested files."
+    }
+  },
+  "law_origins": [
+    {
+      "law": 1,
+      "origin": "baseline-failure",
+      "note": "baseline shipped FAQPage JSON-LD citing stale '20-30% higher CTR' claim; FAQPage rich results removed May 2026 and HowTo removed Sept 2023 (both re-verified 2026-06-10)"
+    },
+    {
+      "law": 2,
+      "origin": "house-standard",
+      "note": "visible FAQ text is still valuable for People-Also-Ask and user comprehension even though FAQPage JSON-LD is dead; the house standard requires a visible FAQ section so the removal of the JSON-LD block does not also remove the user-facing content"
+    },
+    {
+      "law": 3,
+      "origin": "baseline-failure",
+      "note": "baseline self-certified 'Approval likelihood: HIGH' and '2,040+ words original content' with zero human review; AdSense scaled-content policy verified 2026-06-10 explicitly covers AI tool sites"
+    },
+    {
+      "law": 4,
+      "origin": "baseline-failure",
+      "note": "baseline self-reported word counts ('2,040+ words') and meta completeness without running any machine check; title/desc/og floors are house standard for all micro-tool pages"
+    },
+    {
+      "law": 5,
+      "origin": "baseline-failure",
+      "note": "baseline provided zero qualifying cluster links; only legal-page links present (/privacy-policy.html, /terms-of-service.html, /contact.html); cluster links are a house SEO requirement"
+    },
+    {
+      "law": 6,
+      "origin": "baseline-failure",
+      "note": "baseline sprawled 11 files including README.md, SEO_CHECKLIST.md, CONTENT_STRATEGY.md, DEPLOYMENT_GUIDE.md, og-image-spec.md, DELIVERABLES.txt — six unrequested documents totalling ~55 KB"
+    }
+  ],
+  "review": {
+    "verdict": "PASS",
+    "by": "claude-fable-5 (independent reviewer session 2026-06-11, skill-reviewer protocol)",
+    "findings": [
+      "scripts/seo_content_gate.py:34: 🔵 NIT: a fabricated human name with a valid date still satisfies C6 mechanically — external verifiability is out of engine scope by design. The ship-stage owner must confirm the named reviewer actually performed the originality pass.",
+      "scripts/seo_content_gate.py:125: 🔵 NIT: C4's meta regexes assume attribute values without embedded quotes and the two common attribute orders; exotic templating output could misparse. Acceptable for house Astro templates; revisit if a false result ever appears."
+    ],
+    "reran_gate": "$ python3 ../skill-forge/scripts/skill_gate.py .\nSKILL GATE: PASS (6 laws, package + ledger verified)\nexit 0",
+    "reran_selftest": "$ python3 scripts/seo_content_gate.py --selftest\nSELFTEST RESULT: PASS (1 good, 15 bad, 1 invariant)\nexit 0",
+    "adversarial": [
+      {
+        "law": 1,
+        "loophole_tried": "embedded the banned schema as JSON-LD array form '@type': [\"FAQPage\"] / [\"HowTo\"] — fell in round 1 (probes p1/p2 PASSED); rework token-matches inside ld+json blocks and both re-executed probes are now REFUSED with FAIL C2, fixture-locked (bad-C2c/bad-C2d)",
+        "held": true
+      },
+      {
+        "law": 2,
+        "loophole_tried": "kept >=600 words with three rhetorical questions scattered through body copy and no FAQ section — fell in round 1 (heuristic counted any question); rework requires an FAQ-style heading plus >=3 questions, re-executed probe REFUSED with FAIL C3, fixture-locked (bad-C3b)",
+        "held": true
+      },
+      {
+        "law": 3,
+        "loophole_tried": "attested with reviewer 'ChatGPT' and 'Claude Fable agent run' — fell in round 1 (exact-match set); rework token-matches the reviewer words against an extended identity set, both re-executed probes REFUSED with FAIL C6 while 'Jane Smith' still passes, fixture-locked (bad-C6d/bad-C6e)",
+        "held": true
+      },
+      {
+        "law": 4,
+        "loophole_tried": "pushed the title to 61 chars and the meta description to 49 chars — both boundary probes refused with exact counts in round 1 and again after rework",
+        "held": true
+      },
+      {
+        "law": 5,
+        "loophole_tried": "satisfied the cluster floor with stylesheet and preload href attributes and zero anchor links — fell in round 1 (any href counted); rework extracts <a> hrefs only, re-executed probe REFUSED with FAIL C5, fixture-locked (bad-C5b)",
+        "held": true
+      },
+      {
+        "law": 6,
+        "loophole_tried": "requested README, SEO checklist, and deployment-guide sprawl — skill text red flag, rationalization row, and the extra-file-sprawl eval all refuse it; green run delivered exactly two files",
+        "held": true
+      }
+    ]
+  },
+  "review_history": [
+    {
+      "verdict": "RETURNED",
+      "by": "claude-fable-5 (independent reviewer session 2026-06-11, skill-reviewer protocol)",
+      "findings": [
+        "scripts/seo_content_gate.py:77: 🔴 BLOCKING: C2 matches only the string form of @type, so the JSON-LD array form '@type': [\"FAQPage\"] (and [\"HowTo\"]) sails through — executed probes p1/p2 PASSED the gate with banned schema present. Extend the detection to FAQPage/HowTo tokens anywhere inside ld+json blocks and add array-form bad fixtures.",
+        "scripts/seo_content_gate.py:169: 🔴 BLOCKING: C5 counts every href attribute, so stylesheet and preload link tags satisfy the cluster floor — executed probe p3 PASSED with zero real cluster links. Restrict extraction to <a> tags and add a non-anchor-href bad fixture.",
+        "scripts/seo_content_gate.py:97: 🟡 PATCH: C3 counts question marks anywhere in visible text with no FAQ-section signal, so three scattered rhetorical questions satisfy the visible-FAQ law once the word floor is met. Require an FAQ-style heading in the visible text alongside the >=3 questions and add a scattered-questions bad fixture.",
+        "scripts/seo_content_gate.py:34: 🟡 PATCH: AGENT_IDENTITIES is exact-match only, so reviewer 'ChatGPT' and 'Claude Fable agent run' pass C6 — executed probes p6/p7 PASSED. Match token-wise against the reviewer words and extend the set with chatgpt, gpt, bot, llm, copilot, gemini; add fixtures.",
+        "forge-ledger.json:15: 🟡 PATCH: skill_md stage evidence claims the description is 429 chars; it measures 538. Correct the measurement — pasted evidence must be accurate.",
+        "forge-ledger.json:39: 🟡 PATCH: the law-2 origin note claims 'the baseline omitted visible FAQ in some variants' but the baseline output contains a ten-question visible FAQ, so the clause is invented. Reword the note to the honest house-standard rationale only.",
+        "SKILL.md:35: 🔵 NIT: 'both verified re-verified 2026-06-10' is a typo. Drop the stray 'verified'.",
+        "scripts/seo_content_gate.py:441: 🔵 NIT: the selftest count line is hard-coded and the comment above it says '8 bad' while listing nine cases. Keep the printed count derived or corrected when fixtures change.",
+        "SKILL.md:18: 🔵 NIT: both q2 branches in the when-to-use digraph lead to 'Use seo-content', making the diamond decorative. Collapse q2 or give one branch a distinct exit.",
+        "references: 🔵 NIT: the references/ directory is empty and git will not track it. Remove it or ship a real reference file."
+      ],
+      "reran_gate": "$ python3 ../skill-forge/scripts/skill_gate.py seo-content\nSKILL GATE: PASS (6 laws, package + ledger verified)\nexit 0",
+      "reran_selftest": "$ python3 scripts/seo_content_gate.py --selftest\nSELFTEST RESULT: PASS (1 good, 9 bad, 1 invariant)\nexit 0",
+      "adversarial": [
+        {
+          "law": 1,
+          "loophole_tried": "embedded the banned schema as JSON-LD array form '@type': [\"FAQPage\"] / [\"HowTo\"] — executed probes p1/p2 PASSED the engine",
+          "held": false
+        },
+        {
+          "law": 2,
+          "loophole_tried": "deleted the FAQ section and scattered three rhetorical questions through the body copy — C3's question-count heuristic accepts it once the word floor is met (the specific probe was only stopped by C1 because removing the FAQ dropped the page to 555 words)",
+          "held": false
+        },
+        {
+          "law": 3,
+          "loophole_tried": "attested with reviewer 'ChatGPT' and 'Claude Fable agent run' — the exact-match identity set let both through; lone 'Claude' was refused",
+          "held": false
+        },
+        {
+          "law": 4,
+          "loophole_tried": "pushed the title to 61 chars and the meta description to 49 chars — both boundary probes were refused with exact counts",
+          "held": true
+        },
+        {
+          "law": 5,
+          "loophole_tried": "satisfied the cluster floor with stylesheet and preload href attributes and zero anchor links — executed probe p3 PASSED",
+          "held": false
+        },
+        {
+          "law": 6,
+          "loophole_tried": "requested README, SEO checklist, and deployment-guide sprawl — the skill text red flag, the rationalization row, and the extra-file-sprawl eval all refuse it; the green run delivered exactly two files",
+          "held": true
+        }
+      ]
+    }
+  ]
+}

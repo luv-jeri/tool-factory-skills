@@ -138,6 +138,10 @@ def selftest():
             print(f"SELFTEST FAILURE: {f}")
         print(f"SELFTEST RESULT: FAIL ({len(failures)} problems)")
         return 1
+    # The printed counts MUST equal the cases actually executed — keep them
+    # derived (len(bad_cases)), never hard-coded. The package gate enforces
+    # only the floors (>=1 good, >=3 bad, >=1 invariant); the truth of the
+    # numbers is on you, and the reviewer re-runs this line.
     print(f"SELFTEST RESULT: PASS (1 good, {len(bad_cases)} bad, 1 invariant)")
     return 0
 

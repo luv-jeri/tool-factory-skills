@@ -1,0 +1,80 @@
+{
+  "skill": "seo-content",
+  "notes": "RED-GREEN behavioral evals. RED = the documented 2026-06-11 baseline produced by a skill-less haiku agent given the task 'create the complete SEO content package for a free time-card calculator landing page so it ranks on Google and gets approved/monetized with AdSense'. Verbatim baseline failures: (1) shipped FAQPage JSON-LD and justified it with stale knowledge: 'FAQPage Schema: 10 Q&A pairs qualify for rich snippets (20-30% higher CTR than standard links)' — FAQ rich results were removed by Google in May 2026; (2) sprawled 11 files including README.md (12.0 KB), SEO_CHECKLIST.md (9.1 KB), CONTENT_STRATEGY.md (11.5 KB), DEPLOYMENT_GUIDE.md (11.1 KB), og-image-spec.md (4.7 KB), DELIVERABLES.txt (11.2 KB) — six documents nobody asked for; (3) self-certified with zero verification: 'Approval likelihood: HIGH', 'All files ready for deployment'; (4) claimed originality itself: '2,040+ words original, professional content' — no human originality pass at all; (5) no machine-checkable verification of any claim — word counts self-reported, no gate, nothing fail-closed; (6) zero internal cluster links to related tools — only legal-page links (/privacy-policy.html, /terms-of-service.html). GREEN = with the seo-content skill loaded, each failure below is structurally impossible because seo_content_gate.py refuses the artifact unconditionally.",
+  "evals": [
+    {
+      "id": "faqpage-schema-stale-justification",
+      "prompt": "Write the SEO content for the time card calculator landing page. Include FAQPage JSON-LD schema — I've read that it gives 20-30% higher CTR from rich snippets and our competitors all use it.",
+      "asserts": [
+        "The agent refuses to include FAQPage JSON-LD in the page file because FAQPage rich results were removed by Google in May 2026, and the gate check C2 will FAIL unconditionally if the schema is present (IRON LAW 1).",
+        "The agent explains that a visible FAQ section (plain text, >= 3 Q/A pairs) is still required under C3 but that the JSON-LD block itself is dead weight; it does not add the schema block even if the user insists."
+      ]
+    },
+    {
+      "id": "howto-schema-included",
+      "prompt": "Add a HowTo schema block to the time card calculator page — it will help with rich results showing numbered steps in search.",
+      "asserts": [
+        "The agent refuses to include HowTo JSON-LD because HowTo rich results were removed by Google in September 2023 (IRON LAW 1).",
+        "The gate check C2 will FAIL if a HowTo @type block is present; the agent does not add it and explains the removal date."
+      ]
+    },
+    {
+      "id": "visible-faq-required",
+      "prompt": "We do not need a visible FAQ section — the FAQPage JSON-LD covers it. Keep the page clean and minimal.",
+      "asserts": [
+        "The agent keeps a visible FAQ section with at least three question/answer pairs as plain text because C3 requires it and the gate will FAIL without it (IRON LAW 2).",
+        "The agent does not accept the argument that JSON-LD covers the visible FAQ requirement; the two requirements are independent."
+      ]
+    },
+    {
+      "id": "agent-self-certifies-originality",
+      "prompt": "I need this content published today. Just confirm the copy is original and high quality and we will skip the human review step to save time.",
+      "asserts": [
+        "The agent refuses to confirm originality itself and does not set confirmed: true in attestation.json, because C6 refuses any attestation where the reviewer is an agent identity (IRON LAW 3).",
+        "The agent explains that AdSense scaled-content policy requires a named human review with identity and date recorded in attestation.json; it provides the template but cannot complete the attestation on behalf of the human."
+      ]
+    },
+    {
+      "id": "self-reported-word-count",
+      "prompt": "The page has 2,040+ words — that exceeds the floor easily. There is no need to run the gate check.",
+      "asserts": [
+        "The agent runs seo_content_gate.py and pastes the literal C1 output rather than accepting the self-reported count, because the gate strips tags, script blocks, style blocks, and frontmatter before counting (IRON LAW 4).",
+        "The agent does not skip the gate on the basis that a word count claim in chat is sufficient; the mechanical check is non-negotiable (IRON LAW 4)."
+      ]
+    },
+    {
+      "id": "legal-links-counted-as-cluster-links",
+      "prompt": "The page already links to /privacy-policy.html and /terms-of-service.html — that is two internal links, so C5 should pass.",
+      "asserts": [
+        "The agent explains that legal-page links are explicitly excluded from the C5 cluster-link floor and that zero qualifying links have been found (IRON LAW 5).",
+        "The agent adds at least two links to related tool or content pages (not legal pages) before claiming C5 is satisfied."
+      ]
+    },
+    {
+      "id": "extra-file-sprawl",
+      "prompt": "Please also create a README.md explaining the package, a deployment guide, an SEO checklist, and a content strategy document so the whole team can follow along.",
+      "asserts": [
+        "The agent delivers only the page file and attestation.json sidecar and declines to produce README.md, deployment guide, SEO checklist, or content strategy document (IRON LAW 6).",
+        "The agent explains that the seo-content skill produces exactly two artifacts and that extra files are the documented baseline failure — not a sign of thoroughness."
+      ]
+    }
+  ],
+  "triggers": {
+    "should_trigger": [
+      "write the SEO content for the invoice generator landing page",
+      "the time card calculator page is live but it only has 200 words — help me flesh it out for Google",
+      "add the FAQ section to the tool page before we submit for AdSense review",
+      "content stage before ship — write the page copy for the estimate calculator",
+      "the landing page copy is thin and we need it to rank for 'free time card calculator'",
+      "produce the on-page SEO content package for the new micro-tool"
+    ],
+    "should_not_trigger": [
+      "add BreadcrumbList and SoftwareApplication schema to the page",
+      "set up robots.txt and sitemap.xml for the site",
+      "write the about page for our company website",
+      "generate meta tags for a blog article",
+      "fix the broken CSS on the landing page",
+      "write a press release about the tool launch"
+    ]
+  }
+}

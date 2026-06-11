@@ -32,7 +32,10 @@ import sys
 import tempfile
 
 LAW_HEADING_RE = re.compile(r"^#{1,3}\s*IRON LAWS\s*$", re.IGNORECASE | re.MULTILINE)
-LAW_NUM_RE = re.compile(r"^\s*(\d+)\.\s+\S", re.MULTILINE)
+# law numbers are 1-2 digits: a wrapped prose line starting with a year
+# ("2023. Including...") must not read as a law number (keep in sync with
+# skill-forge/scripts/skill_gate.py)
+LAW_NUM_RE = re.compile(r"^\s*(\d{1,2})\.\s+\S", re.MULTILINE)
 FINDING_RE = re.compile(
     r"^.+?(:\d+(-\d+)?)?: (🔴 BLOCKING|🟡 PATCH|🔵 NIT): .+\. .+\.$")
 AGENT_BY = ("agent", "self", "assistant", "forge", "creator", "builder", "")
@@ -169,7 +172,8 @@ description: Use when validating widgets.
 
 ```
 1. FIRST LAW — capture the red.
-2. SECOND LAW — paste literal output.
+2. SECOND LAW — paste literal output. HowTo rich results died in September
+2023. Wrapped year lines are prose, not law numbers.
 3. THIRD LAW — declared files only.
 4. FOURTH LAW — never weaken a check.
 ```

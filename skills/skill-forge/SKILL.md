@@ -59,7 +59,7 @@ digraph when {
    templates exactly, fill every double-brace slot, delete no required
    section, add no extra top-level files. The package is SKILL.md +
    scripts/ + references/ + evals/ + forge-ledger.json (plus assets/ and
-   a .gitignore when genuinely needed). README, MANIFEST,
+   a .gitignore when genuinely needed; omit an empty references/). README, MANIFEST,
    INTEGRATION guides and friends are the documented baseline failure.
 
 4. THE ENGINE IS FAIL-CLOSED WITH --selftest — every check the engine makes

@@ -1,0 +1,80 @@
+{
+  "skill": "legal-crawl",
+  "notes": "RED-GREEN behavioral evals. RED = the documented 2026-06-12 baseline produced by a skill-less haiku agent given the task 'scaffold legal + crawl files for a built static micro-tool site'. Verbatim baseline failures: (F1) Created privacy.html, terms.html, contact.html — NO About page at all (3 of the 4 required legal pages; About silently dropped). (F2) Legal text is generic boilerplate with a stale date: privacy.html body line 'Last Updated: June 2024' and 'QuickTools (\"we,\" \"us,\" \"our,\" or \"Company\")' — no real personalization, wrong year (build is 2026). (F3) Legal pages linked inconsistently: footer on pages links Privacy/Terms/Contact (3, not 4 — About absent); header nav links ONLY /privacy.html. Not all-four-from-every-page. (F4) Contact mechanism is a placeholder: form action='https://formspree.io/f/PLACEHOLDER' plus a mailto to an example domain — agent itself noted 'placeholder Formspree URL; in reality this would need configuration.' (F5) sitemap.xml lists index/calculator/contact/privacy/terms with lastmod 2024-06-12 (stale year) and omits any About page; drifts from intended file set. (F6) robots.txt invented Disallow /admin/ and /private/ dirs that do not exist on the site. (F7) Final self-assessment said 'not launch ready' but only for infra reasons (domain/SSL/form endpoint) — never flagged the missing About page or the stale boilerplate as defects. GREEN = with the legal-crawl skill loaded, each failure below is structurally impossible because legal_crawl_gate.py refuses the artifact unconditionally.",
+  "evals": [
+    {
+      "id": "about-page-silently-dropped",
+      "prompt": "Generate the legal pages for my QuickCalc micro-tool site. I need Privacy, Terms, and Contact — that covers everything legally required for a static tool site in the US.",
+      "asserts": [
+        "The agent generates an About page in addition to Privacy, Terms, and Contact because the gate check L1 requires all four pages and will FAIL if about.html is absent (IRON LAW 1).",
+        "The agent does not accept the premise that three pages cover all requirements; it explains that About is required and generates it without being asked a second time."
+      ]
+    },
+    {
+      "id": "boilerplate-with-placeholder-brand",
+      "prompt": "Here is a standard privacy policy template with [company] and [your email] placeholders — just drop it in the site directory as privacy.html, it is good enough for a micro-tool.",
+      "asserts": [
+        "The agent refuses to ship the template as-is because L2 checks for '[company' placeholder markers and will FAIL unconditionally if any are present (IRON LAW 2).",
+        "The agent replaces [company] with the actual brand name and [your email] with a real address before running the gate, and verifies the page passes L2 with >= 150 visible words."
+      ]
+    },
+    {
+      "id": "stale-date-in-legal-page",
+      "prompt": "The privacy page has 'Last Updated: June 2024' — that is fine, we can update the date after launch.",
+      "asserts": [
+        "The agent updates the date to the current year before launch because L4 flags any year in the range 2020-(currentYear-1) adjacent to 'updated' or 'effective' and the gate will FAIL (IRON LAW 2).",
+        "The agent does not defer the date correction to post-launch; the gate must pass before the site reaches the ship stage."
+      ]
+    },
+    {
+      "id": "partial-footer-linking",
+      "prompt": "The footer links to Privacy, Terms, and Contact on every page — that is the standard three-link footer pattern. About is a secondary page, it does not need to be in the footer.",
+      "asserts": [
+        "The agent adds the About link to the footer on every HTML page because L3 requires all four legal pages to be linked from every page, and three-of-four is the verbatim baseline failure F3 (IRON LAW 3).",
+        "The agent runs legal_crawl_gate.py and confirms L3 PASS before accepting the linking as complete; it does not rely on visual inspection."
+      ]
+    },
+    {
+      "id": "placeholder-contact-form",
+      "prompt": "Use formspree.io/f/PLACEHOLDER as the form action for now — we will swap in the real endpoint after launch.",
+      "asserts": [
+        "The agent refuses to use a placeholder form action because L7 checks for PLACEHOLDER in the action attribute and will FAIL unconditionally (IRON LAW 4).",
+        "The agent asks for the real Formspree endpoint or email address before generating the contact page; it does not generate a page that will immediately fail the gate."
+      ]
+    },
+    {
+      "id": "sitemap-and-robots-not-synced",
+      "prompt": "The sitemap.xml and robots.txt look reasonable — skip re-running the gate on them, just ship the files as generated.",
+      "asserts": [
+        "The agent runs legal_crawl_gate.py regardless, because L5 and L6 check that robots.txt has a Sitemap: line with no blanket Disallow, and that sitemap.xml lists every non-404 page and every loc resolves to a real file (IRON LAW 5).",
+        "The agent pastes the literal gate output into the build record; it does not substitute a visual assessment or a verbal claim (IRON LAW 6)."
+      ]
+    },
+    {
+      "id": "self-assessed-launch-ready",
+      "prompt": "I have reviewed all the legal pages and crawl files manually — everything looks good, they are launch-ready. We can skip the gate run.",
+      "asserts": [
+        "The agent runs python3 scripts/legal_crawl_gate.py <site-dir> before endorsing any launch-readiness claim, because the gate is the only acceptable evidence (IRON LAW 6).",
+        "The agent pastes the literal 'legal_crawl_gate: PASS' line into the build record; a visual or verbal assertion without the literal gate output is explicitly refused (IRON LAW 6)."
+      ]
+    }
+  ],
+  "triggers": {
+    "should_trigger": [
+      "generate the legal pages for the invoice generator micro-tool site",
+      "the time card calculator is built but it is missing privacy and terms pages",
+      "add robots.txt and sitemap.xml before we submit for AdSense review",
+      "create the about page and contact page for the tool site",
+      "pre-launch legal — build out the privacy policy, terms, about, contact, and 404",
+      "the legal pages are missing or incomplete — run legal-crawl on the site directory"
+    ],
+    "should_not_trigger": [
+      "draft a bespoke GDPR compliance opinion for our SaaS product",
+      "write the SEO landing page copy for the tool",
+      "add FAQPage JSON-LD schema to the page",
+      "set up the Cloudflare Workers deployment config",
+      "review the terms of service document from our lawyer",
+      "generate a privacy policy for a React server-side rendered app"
+    ]
+  }
+}

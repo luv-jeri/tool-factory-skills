@@ -58,7 +58,8 @@ digraph when {
 3. FILL THE TEMPLATES, INVENT NOTHING STRUCTURAL — copy the bundled
    templates exactly, fill every double-brace slot, delete no required
    section, add no extra top-level files. The package is SKILL.md +
-   scripts/ + references/ + evals/ + forge-ledger.json. README, MANIFEST,
+   scripts/ + references/ + evals/ + forge-ledger.json (plus assets/ and
+   a .gitignore when genuinely needed). README, MANIFEST,
    INTEGRATION guides and friends are the documented baseline failure.
 
 4. THE ENGINE IS FAIL-CLOSED WITH --selftest — every check the engine makes
@@ -170,7 +171,7 @@ and its ledger entry carries evidence.
 | Whole package layout | — | F1 (anti-sprawl) |
 
 Engine: `python3 scripts/skill_gate.py <skill-dir>` — exit 0 PASS, 1 FAIL, 2 load
-error. `--selftest` proves the gate refuses duds (1 good, 22 bad, 1 invariant).
+error. `--selftest` proves the gate refuses duds (floor: 1 good, 3 bad, 1 invariant).
 
 ## Common rationalizations — STOP
 
@@ -189,7 +190,7 @@ error. `--selftest` proves the gate refuses duds (1 good, 22 bad, 1 invariant).
 
 - You are writing SKILL.md and the ledger has no baseline evidence yet -> stage 2.
 - Your baseline "evidence" is a paraphrase ("it did poorly") instead of verbatim excerpts -> stage 2.
-- A top-level file exists that is not SKILL.md, scripts/, references/, evals/, or forge-ledger.json -> delete it, stage 4.
+- A top-level file exists that is not SKILL.md, scripts/, references/, evals/, assets/, forge-ledger.json, or .gitignore -> delete it, stage 4.
 - The engine has checks with no corresponding bad fixture -> stage 3.
 - An IRON LAW in the new skill is cited by zero eval asserts -> stage 5.
 - The description summarizes the workflow instead of the triggers -> stage 4.

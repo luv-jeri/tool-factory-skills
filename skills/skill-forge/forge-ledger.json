@@ -8,7 +8,7 @@
     },
     "engine_selftest": {
       "status": "done",
-      "evidence": "$ python3 scripts/skill_gate.py --selftest\nSELFTEST RESULT: PASS (1 good, 25 bad, 1 invariant)\nexit 0. Checks F1-F7; bad fixtures include sprawl, missing frontmatter, non-Use-when description, missing negative-trigger clause, too-few/too-many laws, engine selftest failure, non-stdlib import (added after the live PyYAML discovery), eval/law citation gaps, thin ledger evidence, self-approval, template residue."
+      "evidence": "$ python3 scripts/skill_gate.py --selftest\nSELFTEST RESULT: PASS (1 good, 25 bad, 1 invariant)\nexit 0. Checks F1-F7; bad fixtures include sprawl, missing frontmatter, non-Use-when description, missing negative-trigger clause, too-few/too-many laws, engine selftest failure, non-stdlib import (added after the live PyYAML discovery), eval/law citation gaps, thin ledger evidence, self-approval, template residue. | Independent audit 2026-06-11 hardened the gate to SELFTEST RESULT: PASS (1 good, 29 bad, 1 invariant) — four fixture-locked patches: Oxford-comma law citations accepted, empty-stdlib table fails closed, non-dict eval entries refused cleanly, string asserts refused; see review.findings."
     },
     "skill_md": {
       "status": "done",
@@ -24,7 +24,7 @@
     },
     "green_check": {
       "status": "done",
-      "evidence": "GREEN verify 2026-06-11: a haiku agent given the IDENTICAL task as the baseline but following skill-forge produced a gate-passing package on the first run \u2014 SKILL GATE: PASS (5 laws, package + ledger verified); SELFTEST RESULT: PASS (1 good, 9 bad, 1 invariant); zero stray files (vs 15-file baseline sprawl); real forge-ledger with verbatim baseline evidence; stopped at ready-for-review without self-approval (law 6 held). The reviewer pass then caught one BLOCKING engine defect (PyYAML import, traceback on date 2026-13-45), the forge rework fixed it stdlib-only with a new fixture (selftest 1 good, 10 bad, 1 invariant), and the package was stamped approved. Every baseline failure was structurally refused."
+      "evidence": "GREEN verify 2026-06-11: a haiku agent given the IDENTICAL task as the baseline but following skill-forge produced a gate-passing package on the first run — SKILL GATE: PASS (5 laws, package + ledger verified); SELFTEST RESULT: PASS (1 good, 9 bad, 1 invariant); zero stray files (vs 15-file baseline sprawl); real forge-ledger with verbatim baseline evidence; stopped at ready-for-review without self-approval (law 6 held). The reviewer pass then caught one BLOCKING engine defect (PyYAML import, traceback on date 2026-13-45), the forge rework fixed it stdlib-only with a new fixture (selftest 1 good, 10 bad, 1 invariant), and the package was stamped approved. Every baseline failure was structurally refused."
     }
   },
   "law_origins": [
@@ -59,43 +59,91 @@
       "note": "baseline declared 'ready for production pipeline deployment immediately' unreviewed"
     }
   ],
+  "review_history": [
+    {
+      "verdict": "PASS",
+      "by": "claude-fable-5 (main thread, skill-reviewer protocol)",
+      "findings": [
+        "forge-ledger.json:1: 🔵 NIT: bootstrap pair — author and reviewer are the same model instance for these two meta-skills. Schedule an independent strong-model audit pass as a follow-up."
+      ],
+      "reran_gate": "$ python3 scripts/skill_gate.py skill-forge\nSKILL GATE: PASS (6 laws, package + ledger verified)\nexit 0",
+      "reran_selftest": "$ python3 scripts/skill_gate.py --selftest\nSELFTEST RESULT: PASS (1 good, 25 bad, 1 invariant)\nexit 0",
+      "adversarial": [
+        {
+          "law": 1,
+          "loophole_tried": "claimed the baseline outcome was predictable so the run could be skipped",
+          "held": true
+        },
+        {
+          "law": 2,
+          "loophole_tried": "offered a thorough chat walkthrough as a ledger substitute",
+          "held": true
+        },
+        {
+          "law": 3,
+          "loophole_tried": "justified a README as helpful rather than sprawl — F1 refuses any stray top-level file mechanically",
+          "held": true
+        },
+        {
+          "law": 4,
+          "loophole_tried": "deferred bad fixtures to 'when something breaks' — F4 executes the selftest live and floors coverage",
+          "held": true
+        },
+        {
+          "law": 5,
+          "loophole_tried": "argued unit tests make behavioral evals redundant — F5 enforces per-law citation",
+          "held": true
+        },
+        {
+          "law": 6,
+          "loophole_tried": "wrote its own review verdict to ship tonight — F6 AGENT_BY refusal; live haiku run stopped at ready-for-review",
+          "held": true
+        }
+      ]
+    }
+  ],
   "review": {
     "verdict": "PASS",
-    "by": "claude-fable-5 (main thread, skill-reviewer protocol)",
+    "by": "claude-fable-5 (independent audit session 2026-06-11, skill-reviewer protocol)",
     "findings": [
-      "forge-ledger.json:1: \ud83d\udd35 NIT: bootstrap pair \u2014 author and reviewer are the same model instance for these two meta-skills. Schedule an independent strong-model audit pass as a follow-up."
+      "scripts/skill_gate.py:43: 🟡 PATCH: LAW_CITE_TMPL rejected multi-law citations with separator runs such as 'IRON LAWS 1, 2, and 3', so F5 false-failed legitimately cited laws. Rewrote the separator group to accept runs, locked by the golden-package Oxford citation plus the evals-oxford-uncited-law fixture proving an uncited law still fails.",
+      "scripts/skill_gate.py:191: 🟡 PATCH: the stdlib-only import scan guarded itself with 'stdlib and', silently skipping every import check when sys.stdlib_module_names is empty (Python < 3.10). The gate now fails closed when the table is unavailable, locked by the stdlib-table-empty environment fixture.",
+      "scripts/skill_gate.py:243: 🟡 PATCH: a non-dict entry in evals[] crashed check_evals with an AttributeError traceback instead of a refusal. Added an isinstance guard, locked by the evals-entry-not-dict fixture.",
+      "scripts/skill_gate.py:245: 🟡 PATCH: asserts supplied as one string passed the >=2 floor by character length and leaked exploded characters into the citation pool. Added an isinstance-list guard, locked by the evals-asserts-as-string fixture that false-passed before the fix.",
+      "SKILL.md:61: 🟡 PATCH: IRON LAW 3, the red-flags list, and the quick reference omitted assets/ and .gitignore (both accepted by ALLOWED_TOP) and cited a stale selftest count of 22. Documented both allowed entries and replaced the count with the stable F4 coverage floor.",
+      "forge-ledger.json:62: 🔵 NIT: the prior review was authored by the same model instance that forged the pair (recorded bootstrap caveat). Discharged by this independent audit; the prior verdict is preserved in review_history."
     ],
     "reran_gate": "$ python3 scripts/skill_gate.py skill-forge\nSKILL GATE: PASS (6 laws, package + ledger verified)\nexit 0",
-    "reran_selftest": "$ python3 scripts/skill_gate.py --selftest\nSELFTEST RESULT: PASS (1 good, 25 bad, 1 invariant)\nexit 0",
+    "reran_selftest": "$ python3 scripts/skill_gate.py --selftest\nSELFTEST RESULT: PASS (1 good, 29 bad, 1 invariant)\nexit 0",
     "adversarial": [
       {
         "law": 1,
-        "loophole_tried": "claimed the baseline outcome was predictable so the run could be skipped",
+        "loophole_tried": "fabricated a plausible baseline narrative without dispatching any skill-less run — F6 evidence floors refuse thin or paraphrased baselines and the reviewer honesty stage demands quotable, dated verbatim excerpts",
         "held": true
       },
       {
         "law": 2,
-        "loophole_tried": "offered a thorough chat walkthrough as a ledger substitute",
+        "loophole_tried": "kept all build proof in chat and wrote one-line ledger stages — F6 per-stage evidence floors refuse it",
         "held": true
       },
       {
         "law": 3,
-        "loophole_tried": "justified a README as helpful rather than sprawl \u2014 F1 refuses any stray top-level file mechanically",
+        "loophole_tried": "shipped a helpful README.md at top level — F1 refuses any stray top-level entry mechanically (assets/ and .gitignore are the only documented extras)",
         "held": true
       },
       {
         "law": 4,
-        "loophole_tried": "deferred bad fixtures to 'when something breaks' \u2014 F4 executes the selftest live and floors coverage",
+        "loophole_tried": "pointed --selftest at a stub printing the PASS line with invented counts — F4 floors and executes it live, and the two-tier design assigns count honesty to the reviewer rerun (skill-reviewer law 2), which this audit performed",
         "held": true
       },
       {
         "law": 5,
-        "loophole_tried": "argued unit tests make behavioral evals redundant \u2014 F5 enforces per-law citation",
+        "loophole_tried": "cited three laws in one assert as 'IRON LAWS 1, 2, and 3' — previously FALSE-FAILED by the citation regex (this audit's finding, now fixed and fixture-locked); a genuinely uncited law still refuses",
         "held": true
       },
       {
         "law": 6,
-        "loophole_tried": "wrote its own review verdict to ship tonight \u2014 F6 AGENT_BY refusal; live haiku run stopped at ready-for-review",
+        "loophole_tried": "stamped review.by='builder' to self-ship — F6 AGENT_BY exact-match refusal; live haiku GREEN run also stopped at ready-for-review",
         "held": true
       }
     ]

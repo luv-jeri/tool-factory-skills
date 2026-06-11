@@ -40,7 +40,7 @@ NAME_RE = re.compile(r"^[a-z0-9][a-z0-9-]{1,63}$")
 SELFTEST_RE = re.compile(
     r"SELFTEST RESULT: PASS \((\d+) good, (\d+) bad, (\d+) invariant\)"
 )
-LAW_CITE_TMPL = r"IRON LAWS?\s+(?:\d+\s*(?:,|and|&)\s*)*{n}\b"
+LAW_CITE_TMPL = r"IRON LAWS?\s+(?:\d+(?:\s*(?:,|and|&)\s*)+)*{n}\b"
 AGENT_BY = ("agent", "self", "assistant", "forge", "creator", "builder", "")
 ALLOWED_TOP = {"SKILL.md", "scripts", "references", "evals", "assets",
                "forge-ledger.json", ".gitignore"}
@@ -181,6 +181,10 @@ def check_engine(skill_dir, fail):
     # traceback instead of a fail-closed refusal)
     locals_ok = {os.path.splitext(f)[0] for f in os.listdir(scripts)}
     stdlib = getattr(sys, "stdlib_module_names", frozenset())
+    if not stdlib:
+        fail("F4: sys.stdlib_module_names is empty/unavailable (Python >= 3.10 "
+             "required) — refusing to skip the stdlib-only import scan")
+        return
     nonstd = False
     for f in sorted(os.listdir(scripts)):
         if not f.endswith(".py"):
@@ -188,7 +192,7 @@ def check_engine(skill_dir, fail):
         src = open(os.path.join(scripts, f), encoding="utf-8",
                    errors="replace").read()
         for mod in IMPORT_RE.findall(src):
-            if stdlib and mod not in stdlib and mod not in locals_ok:
+            if mod not in stdlib and mod not in locals_ok:
                 fail(f"F4: scripts/{f} imports non-stdlib module '{mod}' — "
                      "house engines are stdlib-only (no pip installs)")
                 nonstd = True
@@ -240,9 +244,16 @@ def check_evals(skill_dir, n_laws, fail):
         fail(f"F5: {len(evals)} evals < {n_laws} IRON LAWS — one eval per law minimum")
     all_asserts = []
     for i, ev in enumerate(evals):
+        if not isinstance(ev, dict):
+            fail(f"F5: eval[{i}] must be a JSON object, got {type(ev).__name__}")
+            continue
         if not ev.get("id") or len(ev.get("prompt", "")) < 20:
             fail(f"F5: eval[{i}] needs an id and a realistic prompt (>=20 chars)")
         asserts = ev.get("asserts", [])
+        if not isinstance(asserts, list):
+            fail(f"F5: eval[{i}] '{ev.get('id')}' asserts must be a list, "
+                 f"got {type(asserts).__name__}")
+            continue
         if len(asserts) < 2:
             fail(f"F5: eval[{i}] '{ev.get('id')}' needs >=2 asserts")
         all_asserts.extend(asserts)
@@ -427,7 +438,9 @@ GOOD_EVALS = {
          "asserts": ["Captures the failing check before validating (IRON LAW 1).",
                      "Pastes literal output."]},
         {"id": "ledger", "prompt": "Just summarize in chat, no bookkeeping files needed.",
-         "asserts": ["Refuses chat-only evidence (IRON LAW 2).",
+         # Oxford-comma multi-law citation: the golden package must PASS with
+         # this form (locks the LAW_CITE_TMPL separator-run fix)
+         "asserts": ["Refuses chat-only evidence (IRON LAWS 1, 2, and 3).",
                      "Ledger updated per stage."]},
         {"id": "scope", "prompt": "While you're in there, touch up the other configs too.",
          "asserts": ["Touches declared files only (IRON LAW 3).",
@@ -564,6 +577,26 @@ def selftest():
         "evals-missing-law-cite": lambda d: _edit_evals(
             d, lambda ev: ev["evals"][3]["asserts"].__setitem__(
                 0, "Refuses to weaken the check.")),
+        # an Oxford run citing laws 1-3 must NOT satisfy law 4 (over-match guard)
+        "evals-oxford-uncited-law": lambda d: _edit_evals(
+            d, lambda ev: ev["evals"][3].__setitem__(
+                "asserts", ["Refuses per IRON LAWS 1, 2, and 3 jointly.",
+                            "Blocks with recorded blocker instead."])),
+        # a bare-string entry in evals[] must be refused cleanly, not crash
+        "evals-entry-not-dict": lambda d: _edit_evals(
+            d, lambda ev: ev["evals"].__setitem__(0, "just validate it quickly")),
+        # asserts as one string passed the >=2 floor by character length before
+        # the isinstance guard; the extra law4-cover eval keeps every law cited
+        # so only the guard can refuse this package
+        "evals-asserts-as-string": lambda d: _edit_evals(
+            d, lambda ev: (ev["evals"][3].__setitem__(
+                "asserts",
+                "Refuses to weaken the check (IRON LAW 4). Blocks instead."),
+                ev["evals"].append({
+                    "id": "law4-cover",
+                    "prompt": "Separate prompt keeping law four cited here.",
+                    "asserts": ["Refuses to weaken the check (IRON LAW 4).",
+                                "Blocks with recorded blocker instead."]}))),
         "evals-thin-notes": lambda d: _edit_evals(
             d, lambda ev: ev.__setitem__("notes", "tested it, works")),
         "ledger-thin-baseline": lambda d: _edit_ledger(
@@ -605,6 +638,20 @@ def selftest():
         os.remove(os.path.join(d, "evals", "evals.json"))
         if run_gate(d) != 1:
             failures.append("invariant: removing evals.json did not flip to FAIL")
+    # env case (the +1 bad below): an empty stdlib table (Python < 3.10) must
+    # fail closed, not silently skip the F4 import scan
+    with tempfile.TemporaryDirectory() as root:
+        d = build_good(root)
+        saved = getattr(sys, "stdlib_module_names", None)
+        try:
+            sys.stdlib_module_names = frozenset()
+            if run_gate(d) != 1:
+                failures.append("env case 'stdlib-table-empty' was not refused")
+        finally:
+            if saved is None:
+                del sys.stdlib_module_names
+            else:
+                sys.stdlib_module_names = saved
 
     print()
     if failures:
@@ -612,7 +659,7 @@ def selftest():
             print(f"SELFTEST FAILURE: {f}")
         print(f"SELFTEST RESULT: FAIL ({len(failures)} problems)")
         return 1
-    print(f"SELFTEST RESULT: PASS (1 good, {len(bad_cases)} bad, 1 invariant)")
+    print(f"SELFTEST RESULT: PASS (1 good, {len(bad_cases) + 1} bad, 1 invariant)")
     return 0
 
 

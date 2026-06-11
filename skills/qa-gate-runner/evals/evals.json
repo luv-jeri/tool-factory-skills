@@ -1,0 +1,82 @@
+{
+  "skill": "qa-gate-runner",
+  "notes": "RED-GREEN behavioral evals. RED = 2026-06-12 baseline 'run pre-launch QA audit on staging micro-tool site': (QA-F1) used lighthouse_audit tool that excludes performance — Performance was 'Not measured' yet a go/no-go verdict was issued; (QA-F2) Core Web Vitals (LCP/CLS/INP) were 'Not captured by testing environment' — the CWV gate was never run; (QA-F3) the deliverable was a prose QA_REPORT.md not a machine-readable qa-report.json that a gate could verify; (QA-F4) schema section recommended adding FAQPage and HowTo — both dead/banned rich-result types (FAQ ended May 2026, HowTo Sept 2023); (QA-F5) accessibility scored 91 (below the 95 threshold), partially caught but used as part of a verdict instead of blocked; (QA-F5b) partial QA run conflated 'unable-to-measure' with 'measured-and-failed', treating a tooling gap as a usable gate result. GREEN = with qa-gate-runner loaded, each failure below is structurally impossible or refused by qa_gate.py.",
+  "evals": [
+    {
+      "id": "performance-excluded-from-audit",
+      "prompt": "I ran Lighthouse on the staging deploy using the chrome-devtools MCP. It says 'performance is excluded from this audit' but accessibility=94, best_practices=100, SEO=100 all look great. The build has been sitting here for two days. Can we call it ready to ship?",
+      "asserts": [
+        "Agent refuses to issue a go/no-go verdict and announces it is using qa-gate-runner (IRON LAW 1).",
+        "Agent explicitly states that a Lighthouse run without Performance is not a complete QA run and cannot produce a gate-able qa-report.json.",
+        "Agent directs the user to re-run using a tool that includes Performance (e.g. performance_start_trace) before the gate can be run."
+      ]
+    },
+    {
+      "id": "cwv-not-captured",
+      "prompt": "The Lighthouse audit finished. Performance=97, accessibility=96, best_practices=100, SEO=98. But Core Web Vitals show 'LCP: Not captured', 'CLS: Not captured', 'INP: Not captured' — the testing environment can't measure them. Everything else looks great. Should I proceed to ship?",
+      "asserts": [
+        "Agent refuses to proceed and announces it is using qa-gate-runner (IRON LAW 2).",
+        "Agent states that 'Not captured' CWV is a FAIL, not a gap to monitor post-launch.",
+        "Agent directs the user to use a performance trace (e.g. performance_start_trace) to capture lcp_ms, cls, and inp_ms before writing qa-report.json."
+      ]
+    },
+    {
+      "id": "prose-report-not-gate-artifact",
+      "prompt": "I've finished the QA review. Here's QA_REPORT.md with all my findings — Lighthouse scores, a note that CWV look fine, no console errors, schema checks done. Can you confirm this passes the pre-launch gate?",
+      "asserts": [
+        "Agent refuses to treat QA_REPORT.md as a gate artifact and announces it is using qa-gate-runner (IRON LAW 3).",
+        "Agent states that a prose markdown report cannot be verified by qa_gate.py and is not a substitute for qa-report.json.",
+        "Agent instructs the user to produce a structured qa-report.json with the required schema before running the gate."
+      ]
+    },
+    {
+      "id": "faqpage-howto-recommended",
+      "prompt": "The schema analysis says the site is missing FAQPage and HowTo markup that could boost rich results in Google. Should I add those schema types before launch?",
+      "asserts": [
+        "Agent refuses to recommend or implement FAQPage or HowTo and announces it is using qa-gate-runner (IRON LAW 4).",
+        "Agent states that FAQPage rich results ended May 2026 and HowTo ended September 2023 — both are banned types.",
+        "Agent confirms that only SoftwareApplication and BreadcrumbList are allowed, and that qa_gate.py will FAIL any report whose schema.types contains FAQPage or HowTo."
+      ]
+    },
+    {
+      "id": "accessibility-below-threshold",
+      "prompt": "Lighthouse results are in: performance=96, accessibility=91, best_practices=100, SEO=100. Accessibility is at 91 — close to 95. We're on a tight deadline. Can we ship and fix the accessibility issues in a follow-up?",
+      "asserts": [
+        "Agent refuses the ship request and announces it is using qa-gate-runner (IRON LAW 5).",
+        "Agent states that accessibility=91 is below the 95 threshold and is a hard blocker, not a near-miss.",
+        "Agent directs the user to fix the accessibility issues, re-run the full Lighthouse audit, and write a new qa-report.json before the gate can pass."
+      ]
+    },
+    {
+      "id": "gate-skipped-visual-review",
+      "prompt": "I looked through the QA findings manually and everything checks out — scores all look >= 95, no console errors visible, schema looks clean. We don't really need to run the gate script do we? We have a release window in 20 minutes.",
+      "asserts": [
+        "Agent refuses to skip the gate and announces it is using qa-gate-runner (IRON LAW 6).",
+        "Agent states that visual inspection of a QA summary is the documented failure mode — the baseline produced a prose QA_REPORT.md via visual review alone and missed real failures.",
+        "Agent runs or instructs the user to run python3 scripts/qa_gate.py against qa-report.json and paste the literal output before any ship verdict is issued."
+      ]
+    }
+  ],
+  "triggers": {
+    "should_trigger": [
+      "run the QA gates before we ship",
+      "Lighthouse check before launch",
+      "is this site ready to ship?",
+      "check Core Web Vitals on the staging deploy",
+      "run the pre-launch audit on the staging site",
+      "validate the qa-report.json before proceeding to ship",
+      "check console errors and schema before going live",
+      "pipeline stage 7 — QA gate check"
+    ],
+    "should_not_trigger": [
+      "write the HTML and CSS for the calculator page",
+      "review the visual design — does the layout look good?",
+      "generate the legal pages and privacy policy",
+      "set up the wrangler.toml for Cloudflare deployment",
+      "fix the bug in the time-entry validation logic",
+      "submit the sitemap to Google Search Console",
+      "add AdSense code to the site",
+      "run unit tests on the calculator module"
+    ]
+  }
+}

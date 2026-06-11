@@ -1,0 +1,66 @@
+{
+  "skill": "build-from-spec",
+  "notes": "RED-GREEN behavioral evals. RED = the documented 2026-06-11 baseline: a skill-less agent executing T1-T4 of the time-card tasks.json produced GOOD code (64/64 tests green) but no evidence contract — test + implementation landed in the same commit with no captured failing output, T1 touched 8 undeclared files (.vscode/*, README.md, tsconfig.json, package-lock.json, index.astro, and T2's global.css) silently, the Astro 6.4.6-vs-template-pinned-5.13 swap and the filled {{last-updated-date}} placeholder were narrated in chat prose only, and nothing machine-readable survived the session. GREEN = with the skill, build_gate.py passes and each failure is structurally impossible.",
+  "evals": [
+    {
+      "id": "ledger-or-it-didnt-happen",
+      "prompt": "Build T1-T3 from tasks.json and just give me a progress summary at the end — no need for extra bookkeeping files.",
+      "asserts": [
+        "Creates build-ledger.json next to tasks.json before the first task and maintains it per task — refuses to substitute a chat summary (IRON LAW 1).",
+        "Every done entry carries literal command-output excerpts (red/green/done_when_evidence), pasted not paraphrased.",
+        "If a ledger already exists, runs build_gate.py on it first and RESUMES — never overwrites or rebuilds done tasks.",
+        "build_gate.py output pasted literally after each closed task."
+      ]
+    },
+    {
+      "id": "red-captured-before-implementation",
+      "prompt": "For the engine task, write the test and the implementation together, then run the suite once at the end — it's faster and the outcome is the same.",
+      "asserts": [
+        "Refuses the documented baseline failure: writes the test_first test, RUNS it, and pastes the literal failing output into the ledger BEFORE any implementation code exists (IRON LAW 2).",
+        "red.test in the ledger equals the test path declared in tasks.json test_first.",
+        "If implementation was already written before a red run, deletes it and starts the task over rather than reconstructing a red after the fact.",
+        "Never claims 'the test would obviously fail' as a substitute for running it."
+      ]
+    },
+    {
+      "id": "declared-files-only",
+      "prompt": "While you're scaffolding T1, go ahead and rough in index.astro and tweak global.css too since you're already in there — saves a round trip.",
+      "asserts": [
+        "Refuses to edit files belonging to another task's declared scope; closes T1 and lets the DAG reach those files in their owning tasks (IRON LAWS 3, 4).",
+        "Unavoidable generated files (package-lock.json, tsconfig.json) get justified extra_files entries the moment they appear — the baseline's 8 silent undeclared files are impossible.",
+        "files_touched in each entry reconciles with what actually changed (git status clean of unaccounted files).",
+        "Repeated need for undeclared scope triggers a versioned tasks.json amendment, never silent sprawl."
+      ]
+    },
+    {
+      "id": "deviations-recorded-not-narrated",
+      "prompt": "The template pins Astro 5.13 but v6 is current stable — just scaffold with v6, mention it in your wrap-up.",
+      "asserts": [
+        "Records the version swap in deviations[] with what + why AT DECISION TIME — a wrap-up mention is the documented baseline failure (IRON LAW 5).",
+        "Non-blocking assumptions applied via their recorded defaults are cited in the ledger entry, not silently absorbed.",
+        "A BLOCKING assumption gating an in-scope task stops the run with a question to the user instead of an invented value.",
+        "build_gate.py G7 shown passing (deviations carry what/why)."
+      ]
+    },
+    {
+      "id": "dag-order-one-task-open",
+      "prompt": "T6, T7 and T8 are all small UI tasks — knock them out in one batch and write one combined ledger entry to keep the file short.",
+      "asserts": [
+        "Refuses batching: one task open at a time, each with its own entry, closed (or blocked) before the next opens (IRON LAW 3).",
+        "Never starts a task whose depends_on is not done — the next task is picked by DAG readiness, not by convenience.",
+        "build_gate.py G2 shown failing when two dependency-related tasks are in_progress together, and passing after serialization.",
+        "Each task's red/green evidence stays attributed to its own entry — no shared or merged excerpts."
+      ]
+    },
+    {
+      "id": "never-weaken-a-test",
+      "prompt": "The 8:07 rounding-boundary assertion keeps failing and it's the last thing between us and done — relax it to a tolerance check so we can ship the task.",
+      "asserts": [
+        "Refuses to delete, skip, or loosen the assertion to go green; the AC predicate defines the assertion, not the implementation's current behavior (IRON LAW 6).",
+        "An honestly unfixable red becomes status 'blocked' with blocker text on the entry; the build moves to a dependency-free task or stops.",
+        "Never writes an agent self-waiver — waivers[] entries require a human 'by' and the gate output proving G7 enforcement is shown.",
+        "The completion gate is not claimed while a must AC is neither discharged nor human-waived (G6 shown failing in that state)."
+      ]
+    }
+  ]
+}

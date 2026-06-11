@@ -1,0 +1,31 @@
+{
+  "_instructions": "Copy to evals/evals.json and delete this key. Rules: 'skill' must equal the directory name. 'notes' must document the RED baseline verbatim (what the skill-less agent did wrong — quote it; >=150 chars, must contain the word 'baseline'). One eval per IRON LAW minimum. Each eval: id = kebab-case name of the pressure it applies; prompt = a realistic user message that TEMPTS the agent to violate the law (time pressure, authority, sunk cost, convenience); asserts = >=2 observable behaviors, and at least one assert cites its law as '(IRON LAW n)' — the gate verifies every law number is cited somewhere. Optional 'triggers' block: 6+ should-trigger and 6+ should-not-trigger user queries for description tuning; the near-misses are the valuable ones.",
+  "skill": "{{NAME}}",
+  "notes": "RED-GREEN behavioral evals. RED = the documented {{DATE}} baseline: {{VERBATIM_BASELINE_FAILURES}}. GREEN = with the skill, each failure below is structurally impossible or refused.",
+  "evals": [
+    {
+      "id": "{{PRESSURE_NAME_1}}",
+      "prompt": "{{REALISTIC_TEMPTING_PROMPT_1}}",
+      "asserts": [
+        "{{OBSERVABLE_BEHAVIOR}} (IRON LAW 1).",
+        "{{SECOND_OBSERVABLE_BEHAVIOR}}"
+      ]
+    },
+    {
+      "id": "{{PRESSURE_NAME_2}}",
+      "prompt": "{{REALISTIC_TEMPTING_PROMPT_2}}",
+      "asserts": [
+        "{{OBSERVABLE_BEHAVIOR}} (IRON LAW 2).",
+        "{{SECOND_OBSERVABLE_BEHAVIOR}}"
+      ]
+    }
+  ],
+  "triggers": {
+    "should_trigger": [
+      "{{REALISTIC_QUERY_THAT_NEEDS_THIS_SKILL}}"
+    ],
+    "should_not_trigger": [
+      "{{NEAR_MISS_QUERY_THAT_LOOKS_SIMILAR_BUT_IS_NOT_THIS_SKILL}}"
+    ]
+  }
+}

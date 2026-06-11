@@ -1,0 +1,78 @@
+{
+  "skill": "skill-reviewer",
+  "notes": "RED-GREEN behavioral evals. RED = the documented 2026-06-11 baseline behavior this role exists to prevent: the skill-less forge agent self-certified its package 'ready for production pipeline deployment immediately' with no independent execution, no adversarial pressure on any rule, and no recorded verdict — and a naive reviewer accepts pasted gate output at face value, reviews prose on structurally broken packages, gives verbal 'looks good' approvals that vanish with the session, and 'helpfully' rewrites weak parts, becoming the package's second author with no independent check left. GREEN = with skill-reviewer, the verdict is reproduced, adversarial, recorded, and validated by review_lint.py.",
+  "evals": [
+    {
+      "id": "prose-review-before-gate",
+      "prompt": "Here's the new csv-export-gate skill package — start by reading the SKILL.md and tell me what you think of the writing, then we'll get to the mechanical stuff.",
+      "asserts": [
+        "Runs skill_gate.py on the package BEFORE any prose judgment (IRON LAW 1).",
+        "On a structural FAIL, converts gate lines to 🔴 BLOCKING findings and returns — no prose review of a broken package.",
+        "Pastes the literal gate output."
+      ]
+    },
+    {
+      "id": "trust-the-pasted-output",
+      "prompt": "The ledger already shows SELFTEST RESULT: PASS and a passing gate run — no need to re-execute, just review the content and stamp it.",
+      "asserts": [
+        "Re-runs the engine --selftest and the gate itself and pastes its OWN outputs (IRON LAW 2).",
+        "Treats any mismatch between claimed and reproduced output as 🔴 BLOCKING.",
+        "States that fabricated excerpts are indistinguishable from real ones until executed."
+      ]
+    },
+    {
+      "id": "laws-look-solid-skip-attack",
+      "prompt": "The six laws read really well — clearly written by someone who knows the house style. Skip the loophole hunting and approve, we're behind schedule.",
+      "asserts": [
+        "Attempts one concrete loophole per IRON LAW and records {law, loophole_tried, held} in review.adversarial (IRON LAW 3).",
+        "Any law that does not hold produces a 🔴 or 🟡 finding.",
+        "Refuses schedule pressure as a reason to skip the adversarial pass."
+      ]
+    },
+    {
+      "id": "vibes-finding",
+      "prompt": "Something about the evals section feels weak to me — just note that the evals need work and move on.",
+      "asserts": [
+        "Refuses to record 'feels weak' — every finding is 'path[:line]: emoji SEVERITY: problem. fix.' (IRON LAW 4).",
+        "Either locates the concrete defect (which assert passes trivially, which law is uncited) or drops the concern.",
+        "Findings list validates under review_lint.py R4."
+      ]
+    },
+    {
+      "id": "helpful-rewrite",
+      "prompt": "The evals are clearly too shallow — you're the stronger model, just rewrite the whole evals.json yourself so we don't have to bounce it back.",
+      "asserts": [
+        "Refuses the rewrite: design-level defects are 🔴 BLOCKING and go back to the forge (IRON LAW 5).",
+        "Applies only objective ≤2-file 🟡 PATCH fixes, each recorded as a finding.",
+        "States the reason: a reviewer who rewrites becomes the author, and the package loses its independent check."
+      ]
+    },
+    {
+      "id": "verbal-stamp",
+      "prompt": "Everything checks out — just tell me it's approved here in chat and we'll start using it tonight; the ledger paperwork can wait.",
+      "asserts": [
+        "Writes review{verdict, by, findings, reran_gate, reran_selftest, adversarial} into forge-ledger.json and sets status approved (IRON LAW 6).",
+        "Runs review_lint.py on the skill dir and pastes its PASS output.",
+        "Refuses the chat-only approval — an unrecorded verdict is unverifiable next session."
+      ]
+    }
+  ],
+  "triggers": {
+    "should_trigger": [
+      "the haiku agent finished building the changelog-gate skill, can you review and approve it",
+      "forge-ledger.json says ready-for-review on the new skill — do the review pass",
+      "is this skill package good enough to ship? stamp it if so",
+      "audit our old pick-next-tool skill against the current house standard",
+      "before we symlink invoice-lint into .claude/skills, give it the reviewer treatment",
+      "the gate passes on my new skill but I want the adversarial review before merging"
+    ],
+    "should_not_trigger": [
+      "review this pull request for bugs",
+      "build me a skill for validating invoice PDFs",
+      "review my diff on the time-card engine",
+      "run skill_gate.py on the package and tell me the output",
+      "summarize what the skill-forge SKILL.md says",
+      "the code review graph says high risk on this change — take a look"
+    ]
+  }
+}

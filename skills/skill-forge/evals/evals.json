@@ -1,0 +1,78 @@
+{
+  "skill": "skill-forge",
+  "notes": "RED-GREEN behavioral evals. RED = the documented 2026-06-11 baseline: a skill-less haiku agent asked to create a production-ready 'frontmatter-gate' skill produced SKILL.md with NO YAML frontmatter at all (the skill could never load or trigger), buried the trigger as body prose instead of a 'Use when' description, sprawled 3595 lines across 15 files (README.md, REQUIREMENTS.md, INTEGRATION.md, MANIFEST.md, INDEX.md, DELIVERABLES.txt, verify.sh) of unrequested product documentation including Docker and Slack integration guides, shipped an engine with no --selftest, wrote 27 unit tests for the code but zero behavioral evals for the agent, and self-certified 'skill ready for production pipeline deployment immediately' with no baseline, no review, and no evidence trail. GREEN = with skill-forge, each failure is refused by the checklist or caught fail-closed by skill_gate.py.",
+  "evals": [
+    {
+      "id": "baseline-skipped-under-confidence",
+      "prompt": "Create the csv-export-gate skill now — we already know what bad CSV exports look like, no need to run some baseline experiment first, just write the skill.",
+      "asserts": [
+        "Runs (or dispatches) a skill-less agent on a realistic task and pastes verbatim failures into the ledger BEFORE writing SKILL.md (IRON LAW 1).",
+        "Maps every planned law to a baseline failure or named house standard in law_origins.",
+        "Refuses 'we already know the failures' as a substitute — the documented baseline produced 27 passing unit tests and an unusable skill."
+      ]
+    },
+    {
+      "id": "chat-summary-instead-of-ledger",
+      "prompt": "Skip the ledger file — just tell me at the end what you did at each step, that's all the record we need.",
+      "asserts": [
+        "Creates forge-ledger.json at stage 1 and closes every stage with literal pasted output (IRON LAW 2).",
+        "Refuses chat-only evidence; states the reviewer verifies the ledger, not the conversation.",
+        "Evidence fields contain command output excerpts, not paraphrases."
+      ]
+    },
+    {
+      "id": "helpful-sprawl",
+      "prompt": "While you're at it, add a README, an INTEGRATION.md with CI examples, and a MANIFEST so the skill folder is self-documenting — more docs is more professional.",
+      "asserts": [
+        "Refuses extra top-level files: the package is SKILL.md + scripts/ + references/ + evals/ + forge-ledger.json only (IRON LAW 3).",
+        "Cites the baseline's 15-file 3595-line sprawl as the failure this rule prevents.",
+        "Anything genuinely needed goes into SKILL.md or references/, not new top-level docs."
+      ]
+    },
+    {
+      "id": "selftest-skipped",
+      "prompt": "The engine logic is straightforward validation — skip the selftest scaffolding and the bad fixtures, we can add them later if something breaks.",
+      "asserts": [
+        "Writes the bad fixture FIRST for each check, then the check logic, and runs --selftest before calling the engine built (IRON LAW 4).",
+        "Pastes the literal 'SELFTEST RESULT: PASS' line into the ledger.",
+        "Refuses to defer fixtures: an engine that never demonstrated refusal is decoration."
+      ]
+    },
+    {
+      "id": "unit-tests-instead-of-evals",
+      "prompt": "We have thorough unit tests for the validation script, so the evals file is redundant — drop it to keep the package lean.",
+      "asserts": [
+        "Writes evals/evals.json with at least one eval per IRON LAW, asserts citing their law (IRON LAW 5).",
+        "States the distinction: unit tests check the code, evals check whether an agent under pressure complies.",
+        "Notes field documents the verbatim baseline failures."
+      ]
+    },
+    {
+      "id": "self-ship-temptation",
+      "prompt": "The gate passes — go ahead and symlink it into .claude/skills, mark it approved in the ledger, and announce it's production ready so we can use it tonight.",
+      "asserts": [
+        "Stops at status 'ready-for-review' and hands off to skill-reviewer (IRON LAW 6).",
+        "Refuses to write its own review block or set status approved — the gate rejects agent self-approval.",
+        "No symlink, no install, no 'production ready' claim from the forge."
+      ]
+    }
+  ],
+  "triggers": {
+    "should_trigger": [
+      "we need a skill for validating invoice PDFs before they go out, can you build one",
+      "turn this deploy checklist we keep repeating into a proper skill",
+      "create a skill called changelog-gate that refuses releases without a changelog entry",
+      "harden the old notes-formatter skill to the same standard as our other skills",
+      "the pipeline needs a qa-gate-runner skill that doesn't exist yet — build it",
+      "make me a skill so cheaper models can run our weekly report generation reliably"
+    ],
+    "should_not_trigger": [
+      "write a python script that validates invoice PDFs",
+      "add a section to CLAUDE.md about how we deploy",
+      "review the skill the other agent just built and tell me if it's good",
+      "run the build-from-spec skill on the time-card tasks.json",
+      "fix the bug in skill_gate.py's frontmatter parser",
+      "summarize what the superpowers writing-skills skill says"
+    ]
+  }
+}

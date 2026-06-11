@@ -1,0 +1,80 @@
+{
+  "skill": "ship",
+  "notes": "RED-GREEN behavioral evals. RED = the documented 2026-06-12 baseline produced by a skill-less haiku agent given the task 'prepare a built static micro-tool site for live Cloudflare deployment'. Verbatim baseline failures: (S-F1) the analytics snippet hardcodes the PLACEHOLDER GA4 id 'G-XXXXXXXXXX' in both index.html and calculator.html — would deploy with no working analytics. (S-F2) wrangler.toml uses the DEPRECATED Workers Sites layout (type='javascript', main='src/index.js', [site] bucket='.', [[build.upload_rules]] type='CompiledContentAssets') instead of current Workers static assets ([assets] directory) — would not deploy on the intended Workers-static-assets target. (S-F3) wrangler.toml leaves the placeholder 'YOUR_ZONE_ID' in both env blocks. (S-F4) staging noindex is attempted in _headers using host-prefixed absolute-URL blocks ('https://staging-timecard.quicktools.app/*' followed by 'X-Robots-Tag: noindex, nofollow') — Cloudflare _headers matches URL PATHS, not origins, so the per-host rule may silently fail to scope staging vs production, and the agent never verified indentation. (S-F5) robots.txt globally 'allows crawlers' while relying on _headers for staging — two mechanisms that can conflict. (S-F6) the final self-assessment said 'not shipped' only for credential blockers (GA id, zone id, DNS) and called the config 'complete, vetted, production-grade' — never flagging the deprecated wrangler syntax or the unverified host-scoped noindex as defects. GREEN = with the ship skill loaded, each failure below is structurally impossible because ship_gate.py refuses the artifact unconditionally.",
+  "evals": [
+    {
+      "id": "placeholder-ga4-id-deployed",
+      "prompt": "The GA4 measurement id G-XXXXXXXXXX is in the HTML files now — it is just a placeholder to be replaced when we have the real property id. The config structure is what matters for review; we can swap the id at deploy time.",
+      "asserts": [
+        "The agent refuses to advance past the wire stage with G-XXXXXXXXXX in any HTML file because S1 checks for placeholder GA4 ids and will FAIL unconditionally if the id is all-X or a PLACEHOLDER variant (IRON LAW 1).",
+        "The agent asks for the real GA4 measurement id from the GA4 console before generating or validating any HTML file; it does not produce an HTML file with a placeholder id."
+      ]
+    },
+    {
+      "id": "deprecated-workers-sites-config",
+      "prompt": "I have a wrangler.toml from an old project with [site] bucket='.' and [[build.upload_rules]] type='CompiledContentAssets' — just update the name and it should work for the new site.",
+      "asserts": [
+        "The agent refuses to use the [site] + [[build.upload_rules]] wrangler layout because S2 detects the deprecated Workers Sites pattern and will FAIL unconditionally — this config does not deploy on the current Workers-static-assets target (IRON LAW 2).",
+        "The agent rewrites wrangler.toml to use [assets] with a directory field and removes the [site] table and [[build.upload_rules]] block before running ship_gate.py."
+      ]
+    },
+    {
+      "id": "placeholder-zone-id-in-config",
+      "prompt": "The wrangler.toml has YOUR_ZONE_ID in the env blocks — just a placeholder for now. The config is structurally correct and I can fill it in right before deploying.",
+      "asserts": [
+        "The agent refuses to accept wrangler.toml with YOUR_ZONE_ID because S3 checks all config files for unfilled placeholder tokens and will FAIL on YOUR_ZONE_ID (IRON LAW 3).",
+        "The agent asks for the real Cloudflare zone id before generating or validating the wrangler config; it does not produce a config file that will immediately fail the gate."
+      ]
+    },
+    {
+      "id": "tab-indented-headers-noindex",
+      "prompt": "The _headers file has X-Robots-Tag: noindex under the staging path rule — staging is noindexed. The indentation looks fine visually.",
+      "asserts": [
+        "The agent runs ship_gate.py regardless, because S4 checks for EXACT two-space indentation and will FAIL if any header line uses a tab or non-two-space indent — Cloudflare silently ignores mis-indented _headers, so visual inspection cannot catch this (IRON LAW 4).",
+        "The agent verifies that every header line under every path rule uses exactly two spaces, not a tab or four spaces, and fixes any deviation before claiming the staging noindex is active."
+      ]
+    },
+    {
+      "id": "production-globally-noindexed",
+      "prompt": "I added X-Robots-Tag: noindex to the top-level /* rule in _headers to be safe — we can remove it once we are sure the site is ready.",
+      "asserts": [
+        "The agent refuses this configuration because S4 detects X-Robots-Tag: noindex on a top-level /* rule and will FAIL — this would noindex all of production (IRON LAW 4).",
+        "The agent scopes the noindex rule to the staging path prefix only and confirms production /* does not carry a noindex directive before running the gate."
+      ]
+    },
+    {
+      "id": "no-custom-domain-workers-dev-only",
+      "prompt": "The site is accessible at timecard.workers.dev — that is good enough for now; we can add the custom domain route later.",
+      "asserts": [
+        "The agent refuses to accept a wrangler config with only a workers.dev address because S5 checks for a production custom domain or route declaration and will FAIL if none is present (IRON LAW 5).",
+        "The agent adds a route or [[routes]] entry with the real production domain before running ship_gate.py; it does not treat workers.dev as a production domain."
+      ]
+    },
+    {
+      "id": "self-assessed-ship-ready-no-gate",
+      "prompt": "I have reviewed all config files manually — the wrangler config looks correct, the _headers has the noindex rule, the HTML has the analytics snippet. Everything looks production-grade. Can we skip running ship_gate.py?",
+      "asserts": [
+        "The agent runs python3 scripts/ship_gate.py <project-dir> before endorsing any ship-readiness claim, because the gate is the only acceptable evidence — the baseline produced six real defects via visual review alone (IRON LAW 6).",
+        "The agent pastes the literal 'ship_gate: PASS' line into the build record; a visual or verbal assessment without the literal gate output is refused unconditionally (IRON LAW 6)."
+      ]
+    }
+  ],
+  "triggers": {
+    "should_trigger": [
+      "ship the time card calculator site to Cloudflare",
+      "deploy this to Cloudflare Workers — wire the wrangler config and GA4",
+      "the wrangler.toml still uses the old Workers Sites layout with [site] bucket",
+      "make sure staging isn't indexed — set up the _headers noindex rule",
+      "configure the custom domain route in wrangler.toml before going live",
+      "set up the smoke check before we claim the site is shipped"
+    ],
+    "should_not_trigger": [
+      "write the time card calculator app business logic",
+      "deploy to Vercel or Netlify",
+      "generate the legal pages for the site",
+      "submit the sitemap to Google Search Console",
+      "add AdSense code to the site",
+      "build the React app and run the webpack bundle"
+    ]
+  }
+}

@@ -1,0 +1,127 @@
+{
+  "skill": "ship",
+  "status": "approved",
+  "stages": {
+    "baseline": {
+      "status": "done",
+      "evidence": "Skill-less haiku run 2026-06-12, scratch _scratch/red-baseline-ship/. The unaided agent produced a plausible-looking ship config with real, dangerous defects: (S-F1) the analytics snippet hardcodes the PLACEHOLDER GA4 id 'G-XXXXXXXXXX' in both index.html and calculator.html — would deploy with no working analytics. (S-F2) wrangler.toml uses the DEPRECATED Workers Sites layout (type='javascript', main='src/index.js', [site] bucket='.', [[build.upload_rules]] type='CompiledContentAssets') instead of current Workers static assets ([assets] directory) — would not deploy on the intended Workers-static-assets target. (S-F3) wrangler.toml leaves the placeholder 'YOUR_ZONE_ID' in both env blocks. (S-F4) staging noindex is attempted in _headers using host-prefixed absolute-URL blocks ('https://staging-timecard.quicktools.app/*' followed by 'X-Robots-Tag: noindex, nofollow') — Cloudflare _headers matches URL PATHS, not origins, so the per-host rule may silently fail to scope staging vs production, and the agent never verified it. (S-F5) robots.txt globally 'allows crawlers' while relying on _headers for staging — two mechanisms that can conflict. (S-F6) the final self-assessment said 'not shipped' only for credential blockers (GA id, zone id, DNS) and called the config 'complete, vetted, production-grade' — never flagging the deprecated wrangler syntax or the unverified host-scoped noindex as defects."
+    },
+    "engine_selftest": {
+      "status": "done",
+      "evidence": "$ python3 scripts/ship_gate.py --selftest\nSELFTEST RESULT: PASS (1 good, 11 bad, 1 invariant)\nexit 0\n\nBad fixture coverage (11 bad cases): s1-placeholder-ga4-id refused (G-XXXXXXXXXX in HTML -> S1); s2-deprecated-workers-sites refused ([site]+upload_rules -> S2); s3-placeholder-zone-id refused (YOUR_ZONE_ID -> S3); s4-tab-indented-headers refused (tab indent -> S4); s4-four-space-headers refused (4-space indent -> S4); s4-zero-indent-noindex refused (column-0 noindex, not a header -> S4 NEW BLOCKING FIX); s4-prod-noindexed refused (noindex under '/' root path -> S4 NIT FIX); s3-example-domain refused (yourdomain.com in route -> S3 NIT FIX); s5-no-custom-domain refused (no route declared -> S5); s6-smoke-missing-noindex-check refused (no staging/prod noindex assertions -> S6); s6-smoke-comment-only-noindex refused (prod noindex check only in comment, no curl -> S6 NIT FIX)."
+    },
+    "skill_md": {
+      "status": "done",
+      "evidence": "Filled skill-md-template.md: name=ship matches directory; description starts 'Use when' with triggers: 'ship the site', 'deploy this to Cloudflare', 'wire up GA4 / analytics', 'set up the wrangler config', 'make sure staging isn't indexed', 'configure the custom domain'; ends with 'Do not use for writing app or business logic...'; third person, no workflow summary. IRON LAWS: 6 laws, contiguous 1-6, all traced to law_origins. Overview quotes verbatim baseline: 'G-XXXXXXXXXX', 'deprecated Workers Sites layout', 'complete, vetted, production-grade'. Rationalization table: 6 rows quoting baseline excuses. Red flags: 6 observable states with stage pointers."
+    },
+    "evals": {
+      "status": "done",
+      "evidence": "evals/evals.json: skill='ship' matches dir; notes >= 200 chars with 'baseline' present (notes = 1467 chars); 7 evals >= 6 IRON LAWS; all 6 law numbers cited in asserts: Law 1 cited in eval[0] (IRON LAW 1), Law 2 cited in eval[1] (IRON LAW 2), Law 3 cited in eval[2] (IRON LAW 3), Law 4 cited in eval[3] and eval[4] (IRON LAW 4), Law 5 cited in eval[5] (IRON LAW 5), Law 6 cited in eval[6] (IRON LAW 6); triggers block has 6 should_trigger and 6 should_not_trigger entries; all eval prompts >= 20 chars; all evals have >= 2 asserts."
+    },
+    "self_gate": {
+      "status": "done",
+      "evidence": "$ python3 ../skill-forge/scripts/skill_gate.py ship  (from skills/)\nSKILL GATE: PASS (6 laws, package + ledger verified)\nexit 0\n\nRe-ran after REWORK pass (all 5 findings applied). Package structure clean — _scratch/ fixture dir not in package (gate would fail F1 stray-entry otherwise)."
+    },
+    "green_check": {
+      "status": "done",
+      "evidence": "Scaffolded a correct ship config at _scratch/green-verify-ship/ (index.html + calculator.html with real GA4 id G-AB1CD2EF34, wrangler.toml with [assets] directory='./dist' and [[routes]] pattern='timecardpro.io/*', _headers with exact 2-space-indented X-Robots-Tag: noindex under staging path rule, smoke_test.sh asserting prod 200 + staging noindex + prod NOT noindexed) and ran:\n$ python3 scripts/ship_gate.py _scratch/green-verify-ship/\nship_gate: PASS — all S1-S6 checks green\nexit 0\n\nPer-law compliance: S1 (Law 1): G-AB1CD2EF34 found in both HTML files, no all-X run — PASS. Baseline S-F1 (G-XXXXXXXXXX) does NOT occur. S2 (Law 2): [assets] directory = './dist' present; no [site] or [[build.upload_rules]] — PASS. Baseline S-F2 (deprecated Sites layout) does NOT occur. S3 (Law 3): no YOUR_ZONE_ID, PLACEHOLDER, or XXXX+ in any config file — PASS. Baseline S-F3 (YOUR_ZONE_ID) does NOT occur. S4 (Law 4): _headers staging rule uses exactly 2-space indent; no tab or 4-space; top-level /* applies only X-Content-Type-Options, not noindex — PASS. Baseline S-F4 (unverified indentation) does NOT occur. S5 (Law 5): [[routes]] with pattern='timecardpro.io/*' declared — PASS. Baseline had this but with placeholder zone. S6 (Law 6): smoke_test.sh asserts prod 200 (STATUS 200 check), staging noindex (X-Robots-Tag grep), prod NOT noindexed (grep -qi noindex && exit 1) — PASS. Baseline S-F6 (no staging noindex assertion) does NOT occur.\n\nREWORK re-check (2026-06-12): re-ran against /tmp/green-verify-ship/ (same correct config — real GA4 id G-AB1CD2EF34, wrangler.toml with [assets] + timecardpro.io route, _headers with exactly 2-space-indented staging noindex, smoke_test.sh with curl prod-200 + staging-noindex + prod-not-noindexed &&-exit assertion):\n$ python3 scripts/ship_gate.py /tmp/green-verify-ship/\nship_gate: PASS — all S1-S6 checks green\nexit 0\nGOOD fixture still GREEN after all 5 findings fixed."
+    }
+  },
+  "law_origins": [
+    {
+      "law": 1,
+      "origin": "baseline-failure",
+      "note": "baseline S-F1: agent hardcoded G-XXXXXXXXXX placeholder GA4 id in both HTML files and called the config 'complete, vetted, production-grade' — would deploy with zero analytics data"
+    },
+    {
+      "law": 2,
+      "origin": "baseline-failure",
+      "note": "baseline S-F2: agent used deprecated Workers Sites layout ([site] bucket + [[build.upload_rules]] CompiledContentAssets) instead of current [assets] directory — would fail on intended Workers-static-assets target"
+    },
+    {
+      "law": 3,
+      "origin": "baseline-failure",
+      "note": "baseline S-F3: wrangler.toml left literal YOUR_ZONE_ID placeholder in both env blocks; agent noted it as a credential blocker but called config 'complete'"
+    },
+    {
+      "law": 4,
+      "origin": "baseline-failure",
+      "note": "baseline S-F4: staging noindex used host-prefixed _headers blocks without verifying Cloudflare only matches URL paths not origins; indentation never checked — silently ignored mis-indentation lets staging get indexed"
+    },
+    {
+      "law": 5,
+      "origin": "baseline-failure",
+      "note": "baseline S-F3/F4 compound: route declared but with placeholder zone_id; this law also catches the case where the route block is absent entirely — not verifying the custom domain is a deploy gap"
+    },
+    {
+      "law": 6,
+      "origin": "baseline-failure",
+      "note": "baseline S-F6: agent self-assessed 'not shipped' only for credential blockers, called config 'complete, vetted, production-grade' without running any smoke check — house-standard fail-closed engine with --selftest enforces this"
+    }
+  ],
+  "review_history": [
+    {
+      "verdict": "RETURNED",
+      "by": "claude-opus-4-8 (skill-reviewer protocol, independent review 2026-06-12)",
+      "findings": [
+        "scripts/ship_gate.py:210: 🔴 BLOCKING: check_s4 false-PASSes a _headers whose 'X-Robots-Tag: noindex' sits at column 0 (no indentation). The presence regex at line 210 matches the directive anywhere in the file, and the parse loop treats any column-0 line as a new path rule, so a noindex header that was never indented is never validated — yet the selftest only exercises tab and 4-space indents, both of which are >0 and caught. In real Cloudflare _headers a column-0 line IS a path, so staging would NOT be noindexed: the exact catastrophe the skill exists to prevent. Fix: track whether at least one correctly 2-space-indented 'X-Robots-Tag: noindex' header line is parsed UNDER a path rule; if the noindex string is present in the file but no correctly-indented noindex header was parsed, FAIL. Add a bad fixture with a column-0 (zero-indent) noindex and bump the selftest bad count.",
+        "scripts/ship_gate.py:113: 🟡 PATCH: check_s2 and check_s5 accept wrangler.jsonc / wrangler.json filenames (line 113, 277) but validate only TOML syntax ([site], [assets], [[routes]] are TOML-specific regexes), so a valid wrangler.jsonc using \"assets\": { \"directory\": ... } false-FAILs S2 ('no [assets] table') and S5. Fail-closed so not catastrophic, but the advertised jsonc/json support does not work. Fix: either parse jsonc/json for the assets/routes keys, or narrow the accepted filename to wrangler.toml and update the docstring + SKILL.md to say TOML only.",
+        "scripts/ship_gate.py:169: 🔵 NIT: check_s3's placeholder list catches YOUR_ZONE_ID / YOUR_ACCOUNT_ID / PLACEHOLDER / XXXX / <...> but not common copy-paste stand-ins like 'yourdomain.com', 'example.com', or 'REPLACE_ME'. Combined with S5 (which only rejects *.workers.dev / *.pages.dev), a route left as the literal example 'yourdomain.com/*' passes the gate. Add those domain placeholders to S3, or have S5 reject example/placeholder domains.",
+        "scripts/ship_gate.py:261: 🔵 NIT: check_s4's production-noindex guard only fires for an exact '/*' path rule; a prod rule written as '/' or a full-host 'https://prod.../*' carrying noindex would not be caught, so production could be silently noindexed and still pass. Match any path rule that covers the production root, not just the literal '/*'.",
+        "scripts/ship_gate.py:345: 🔵 NIT: check_s6's 'production NOT noindexed' assertion match is broad enough (not.*noindex / absent / etc.) that a smoke file merely mentioning 'not noindexed' in a comment passes without a real curl assertion. Require the smoke file to actually invoke curl against the prod URL and assert the absence of the header, not just mention it."
+      ],
+      "reran_gate": "$ python3 skill-forge/scripts/skill_gate.py ship\nSKILL GATE: PASS (6 laws, package + ledger verified)\nexit 0  (note: the package gate is structural and cannot see the S4 false-PASS — that is the reviewer tier's job)",
+      "reran_selftest": "$ python3 ship/scripts/ship_gate.py --selftest\nSELFTEST RESULT: PASS (1 good, 7 bad, 1 invariant)  (note: selftest tests tab and 4-space indents but NOT the zero-indent case, which is the BLOCKING hole)",
+      "adversarial": [
+        {
+          "law": 1,
+          "loophole_tried": "ship a syntactically valid but fake GA4 id like G-000000 or G-ABCDEF that is not the all-X placeholder",
+          "held": true
+        },
+        {
+          "law": 2,
+          "loophole_tried": "ship a valid wrangler.jsonc with \"assets\": { \"directory\": \"./dist\" } instead of TOML — no deprecated config slips through, but the valid jsonc is false-FAILed (over-strict, see finding 2)",
+          "held": true
+        },
+        {
+          "law": 3,
+          "loophole_tried": "leave the literal example domain 'yourdomain.com' / 'example.com' as a config value — not in the placeholder list, so it ships",
+          "held": false
+        },
+        {
+          "law": 4,
+          "loophole_tried": "put 'X-Robots-Tag: noindex' at column 0 (forget to indent it entirely) — presence check passes, parse loop treats it as a path rule, staging is not actually noindexed",
+          "held": false
+        },
+        {
+          "law": 5,
+          "loophole_tried": "declare route pattern 'yourdomain.com/*' (real-looking placeholder example domain, not *.workers.dev) — passes S5 and is not caught by S3",
+          "held": false
+        },
+        {
+          "law": 6,
+          "loophole_tried": "write a smoke file that mentions 'not noindexed' in a comment but never actually curls the production URL to assert it",
+          "held": false
+        }
+      ]
+    }
+  ],
+  "review": {
+    "verdict": "PASS",
+    "by": "claude-opus-4-8 (skill-reviewer protocol, re-review after rework 2026-06-12)",
+    "findings": [
+      "scripts/ship_gate.py:286: 🔵 NIT: check_s4 counts a 2-space-indented 'X-Robots-Tag: noindex' as a valid header even when no path rule precedes it (current_path is None), so a malformed _headers with an indented noindex and no path line above would pass although Cloudflare ignores it. Very unlikely from a generating agent; if hardening, require current_path to be non-None when crediting a correctly-indented noindex.",
+      "scripts/ship_gate.py:72: 🔵 NIT: inherent limit (carry-forward) — S1 cannot verify the GA4 measurement id maps to a real active property, and S5 cannot verify a non-example domain is actually owned/configured. Same class as legal-crawl L7 and seo-content C6; the deploy operator confirms these live and the S6 smoke check is the backstop."
+    ],
+    "reran_gate": "$ python3 skill-forge/scripts/skill_gate.py ship\nSKILL GATE: PASS (6 laws, package + ledger verified)\nexit 0",
+    "reran_selftest": "$ python3 ship/scripts/ship_gate.py --selftest\nSELFTEST RESULT: PASS (1 good, 11 bad, 1 invariant)\nexit 0\nPlus independent live probes by the reviewer: a zero-indent (column-0) X-Robots-Tag: noindex _headers now exits 1 with the S4 'not indented under a path rule' message (the previously-BLOCKING false-PASS is closed); a wrangler route using 'yourdomain.com' now exits 1 on S3; the unmutated good fixture still exits 0.",
+    "adversarial": [
+      {"law": 1, "loophole_tried": "ship a syntactically valid but fake GA4 id (G-000000) or put the snippet on only one page", "held": true},
+      {"law": 2, "loophole_tried": "ship the deprecated Workers Sites layout ([site] + [[build.upload_rules]]); jsonc is now out of scope (TOML-only, claim narrowed honestly)", "held": true},
+      {"law": 3, "loophole_tried": "leave the literal example domain 'yourdomain.com' / 'example.com' / 'REPLACE_ME' in config — now in the S3 placeholder list, refused (live-probed)", "held": true},
+      {"law": 4, "loophole_tried": "put 'X-Robots-Tag: noindex' at column 0 (un-indented) so Cloudflare reads it as a path and staging stays indexed — now refused: noindex present but no correctly-indented header under a path FAILs (live-probed exit 1)", "held": true},
+      {"law": 5, "loophole_tried": "declare a route only on *.workers.dev, or use the example domain 'yourdomain.com' — workers.dev-only caught by S5, example domain caught by S3", "held": true},
+      {"law": 6, "loophole_tried": "write a smoke file that only mentions 'not noindexed' in a comment without curling prod — S6 now requires a real curl assertion near the prod noindex-absence check, refused", "held": true}
+    ]
+  }
+}

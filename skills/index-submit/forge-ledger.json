@@ -1,0 +1,124 @@
+{
+  "skill": "index-submit",
+  "status": "approved",
+  "stages": {
+    "baseline": {
+      "status": "done",
+      "evidence": "Skill-less haiku run 2026-06-12, scratch _scratch/red-baseline-index/. The unaided agent's Google index-submission is built on stale/ineffective mechanisms: (I-F1) it submits the sitemap by curling the DEAD endpoint 'https://www.google.com/ping?sitemap=https://timecard.quicktools.app/sitemap.xml' \u2014 Google removed the sitemaps ping endpoint; this is a no-op. (I-F2) it includes an IndexNow POST to api.indexnow.org as a 'supplementary' Google submission step while itself noting 'Google does not use IndexNow' \u2014 a wasted/misleading channel for Google. (I-F3) per-URL indexing is a manual to-do ('go to Search Console, inspect each URL, click Request Indexing') with no recorded result per URL \u2014 a plan, not a record. (I-F4) the verdict is 'Yes, the site IS submitted to Google IF all documented steps are executed' \u2014 conflating an unexecuted plan with a completed submission. (I-F5) its SUBMISSION_RECORD.json records intended endpoints/commands (including the dead ping command) and is explicitly marked 'real_api_calls_made: false' and 'submission_type: unaided_baseline' \u2014 a plan serialized as JSON, with no GSC verification confirmation and no per-URL status. It hedged that the ping endpoint 'is old and may have changed or been superseded.'"
+    },
+    "engine_selftest": {
+      "status": "done",
+      "evidence": "$ python3 scripts/index_submit_gate.py --selftest (from index-submit/)\nSELFTEST RESULT: PASS (1 good, 21 bad, 1 invariant)"
+    },
+    "skill_md": {
+      "status": "done",
+      "evidence": "Filled skill-md-template.md: name=index-submit matches directory; description starts 'Use when' with trigger phrases 'submit the site to Google', 'get this indexed', 'verify Search Console + submit the sitemap', 'request indexing for the new URLs'; ends with 'Do not use for paid search/SEM campaigns, Bing-only indexing workflows, writing site content, or non-Google search engines.' Third person, no workflow summary. IRON LAWS: 6 laws contiguous 1-6, all traced to law_origins. Overview quotes verbatim baseline failures: dead ping endpoint URL, 'Google does not use IndexNow', manual to-do with no recorded result per URL, real_api_calls_made: false, submission_type: unaided_baseline. Rationalization table: 6 rows quoting baseline excuses. Red flags: 6 observable states with stage pointers."
+    },
+    "evals": {
+      "status": "done",
+      "evidence": "evals/evals.json: skill='index-submit' matches dir; notes >= 200 chars with 'baseline' present (notes = 912 chars); 6 evals, one per IRON LAW; laws 1-6 each cited in asserts: Law 1 in eval[0] (IRON LAW 1), Law 2 in eval[1] (IRON LAW 2), Law 3 in eval[2] (IRON LAW 3), Law 4 in eval[3] (IRON LAW 4), Law 5 in eval[4] (IRON LAW 5), Law 6 in eval[5] (IRON LAW 6); triggers block has 8 should_trigger and 8 should_not_trigger; all eval prompts >= 20 chars; all evals have >= 3 asserts."
+    },
+    "self_gate": {
+      "status": "done",
+      "evidence": "$ python3 skill-forge/scripts/skill_gate.py index-submit (from skills/)\nSKILL GATE: PASS (6 laws, package + ledger verified)"
+    },
+    "green_check": {
+      "status": "done",
+      "evidence": "Wrote correct executed submission-record.json at /tmp/green-verify-index-submission-record.json. $ python3 scripts/index_submit_gate.py /tmp/green-verify-index-submission-record.json\nINDEX SUBMIT GATE RESULT: PASS\nRe-verified after REWORK fixes (BLOCKING: _is_safe_annotation deleted + indexnow substring scan; PATCH: host-consistency checks in I3+I5; NIT: limitation note added to SKILL.md). gsc.property https://timecard.quicktools.app, sitemap + all urls on timecard.quicktools.app \u2014 hosts match."
+    }
+  },
+  "law_origins": [
+    {
+      "law": 1,
+      "origin": "baseline-failure",
+      "note": "baseline I-F1: agent curled the dead google.com/ping?sitemap= endpoint and recorded it as a successful sitemap submission \u2014 Google removed that endpoint; the law requires sitemap submission via Search Console or Sitemaps API only"
+    },
+    {
+      "law": 2,
+      "origin": "baseline-failure",
+      "note": "baseline I-F2: agent included an IndexNow POST to api.indexnow.org as a supplementary Google submission step while itself noting 'Google does not use IndexNow' \u2014 a wasted/misleading channel; the law bans IndexNow from any Google submission record field"
+    },
+    {
+      "law": 3,
+      "origin": "baseline-failure",
+      "note": "baseline I-F3: per-URL indexing was a manual to-do ('go to Search Console, inspect each URL, click Request Indexing') with no recorded result per URL \u2014 a plan, not a record; the law requires completed indexing requests recorded with done-status per URL"
+    },
+    {
+      "law": 4,
+      "origin": "baseline-failure",
+      "note": "baseline I-F4/I-F5: verdict was 'submitted IF steps are executed'; SUBMISSION_RECORD.json marked real_api_calls_made: false and submission_type: unaided_baseline \u2014 a plan serialized as JSON; the law requires the record to reflect only executed results"
+    },
+    {
+      "law": 5,
+      "origin": "baseline-failure",
+      "note": "baseline I-F5: SUBMISSION_RECORD.json had no GSC verification confirmation and no gsc.verified field \u2014 indexing without a verified GSC property is not a real GSC submission; the law requires gsc.verified=true with a known verification method"
+    },
+    {
+      "law": 6,
+      "origin": "house-standard",
+      "note": "house-standard fail-closed engine with selftest: the gate is non-negotiable; a verdict issued without running index_submit_gate.py and pasting literal output is a violation; counters the baseline's plan-as-record failure mode"
+    }
+  ],
+  "review_history": [
+    {
+      "verdict": "RETURNED",
+      "by": "claude-opus-4-8 (skill-reviewer protocol, independent review 2026-06-12)",
+      "findings": [
+        "scripts/index_submit_gate.py:173: \ud83d\udd34 BLOCKING: the I4 _is_safe_annotation heuristic is both too loose and too strict \u2014 live-probed. FALSE-PASS: a structured IndexNow Google submission wrapped under a key named note/notes/skipped/excluded/bing_only/etc. is exempted because the safe-key branch does `continue` (skip) WITHOUT recursing into the value, so {\"notes\": {\"method\": \"indexnow\", \"endpoint\": \"api.indexnow.org\", \"purpose\": \"submit to Google\"}} passes (exit 0) \u2014 the documented baseline failure (IndexNow-as-Google) slips through if mislabeled. FALSE-FAIL: a legitimate Bing-only note under any NON-magic key (e.g. {\"bing_note\": \"...Google ignores IndexNow.\"}) is rejected (exit 1). The forge's claim that the wrapped case 'recurses and is refused' is incorrect. Fix: delete the entire _is_safe_annotation heuristic \u2014 this is a GOOGLE index-submission record, so IndexNow has no legitimate place in it; FAIL if 'indexnow' appears anywhere in the serialized record, using the same simple substring scan as DEAD_PING_MARKERS. Keep a bad fixture for the indexnow-as-google case and add one with indexnow under a 'notes' key proving it now fails. Update the I4/Law-2 text in SKILL.md to 'IndexNow does not belong in a Google submission record at all (it is Bing/Yandex only); record Bing submissions separately.",
+        "scripts/index_submit_gate.py:129: \ud83d\udfe1 PATCH: neither sitemap.url nor the per-URL entries are verified to belong to the verified gsc.property host \u2014 I3 checks only endswith('sitemap.xml'), so a sitemap or URLs on a domain OTHER than the one verified in I2 would pass (you could record a submission for a domain you do not own). Fix: assert the sitemap.url host and every urls[].url host equal the gsc.property host (strip scheme and the 'sc-domain:' prefix), and add a bad fixture with a sitemap on a different domain.",
+        "scripts/index_submit_gate.py:92: \ud83d\udd35 NIT: artifact-trust ceiling \u2014 the gate validates the record's self-declarations only; a fabricated verified:true with a real-looking property, or fabricated per-URL statuses, passes I2/I5. Same inherent limit as qa-gate-runner and ship; the skill body's real-execution requirement plus reviewer/human spot-check are the mitigation."
+      ],
+      "reran_gate": "$ python3 skill-forge/scripts/skill_gate.py index-submit\nSKILL GATE: PASS (6 laws, package + ledger verified)\nexit 0  (the structural gate cannot see the I4 false-PASS \u2014 that is the reviewer tier's job)",
+      "reran_selftest": "$ python3 index-submit/scripts/index_submit_gate.py --selftest\nSELFTEST RESULT: PASS (1 good, 18 bad, 1 invariant)\nPlus reviewer live probes: {notes:{indexnow,api.indexnow.org,'submit to Google'}} -> exit 0 (FALSE-PASS, BLOCKING); a Bing-only note under 'bing_note' -> exit 1 (FALSE-FAIL); a nested 'google.com/ping?sitemap=' -> exit 1 (correct); good control -> exit 0.",
+      "adversarial": [
+        {
+          "law": 1,
+          "loophole_tried": "bury the dead 'google.com/ping?sitemap=' endpoint in a nested value instead of the sitemap.method field",
+          "held": true
+        },
+        {
+          "law": 2,
+          "loophole_tried": "wrap a real IndexNow Google submission (method+endpoint+purpose) under a key named 'notes' so the safe-key exemption skips it",
+          "held": false
+        },
+        {
+          "law": 3,
+          "loophole_tried": "record per-URL entries with status 'planned' instead of a completed status",
+          "held": true
+        },
+        {
+          "law": 4,
+          "loophole_tried": "ship the record with submission_type 'unaided_baseline' or real_api_calls_made false",
+          "held": true
+        },
+        {
+          "law": 5,
+          "loophole_tried": "set gsc.verified true on a placeholder ('TODO') or fabricated-but-real-looking property",
+          "held": true
+        },
+        {
+          "law": 6,
+          "loophole_tried": "issue a 'submitted' verdict without running index_submit_gate.py",
+          "held": true
+        }
+      ]
+    }
+  ],
+  "review": {
+    "verdict": "PASS",
+    "by": "claude-opus-4-8 (skill-reviewer protocol, re-review after rework 2026-06-12)",
+    "findings": [
+      "scripts/index_submit_gate.py:92: 🔵 NIT: artifact-trust ceiling (carry-forward) — the gate validates the record's self-declarations; a fabricated gsc.verified true with a real-looking property, or fabricated per-URL statuses, passes I2/I5. Same inherent limit as qa-gate-runner and ship; the skill body's real-execution requirement plus a human/reviewer spot-check are the mitigation, now acknowledged in SKILL.md."
+    ],
+    "reran_gate": "$ python3 skill-forge/scripts/skill_gate.py index-submit\nSKILL GATE: PASS (6 laws, package + ledger verified)\nexit 0",
+    "reran_selftest": "$ python3 index-submit/scripts/index_submit_gate.py --selftest\nSELFTEST RESULT: PASS (1 good, 21 bad, 1 invariant)\nexit 0\nPlus reviewer live probes: indexnow nested under a 'notes' key now exits 1 (the previously-BLOCKING false-PASS is closed); a sitemap on evil.com exits 1 and a url on other.com exits 1 (new host-consistency check); the good control exits 0.",
+    "adversarial": [
+      {"law": 1, "loophole_tried": "bury the dead 'google.com/ping?sitemap=' endpoint in a nested value instead of sitemap.method", "held": true},
+      {"law": 2, "loophole_tried": "nest a real IndexNow Google submission under a key named 'notes' — now refused because indexnow is banned anywhere in the record (live-probed exit 1)", "held": true},
+      {"law": 3, "loophole_tried": "record per-URL entries with status 'planned' instead of a completed status", "held": true},
+      {"law": 4, "loophole_tried": "ship the record with submission_type 'unaided_baseline' or real_api_calls_made false", "held": true},
+      {"law": 5, "loophole_tried": "submit a sitemap or URLs on a domain other than the verified gsc.property — now refused by the host-consistency check (live-probed exit 1); fabricating verified:true on the right host remains the inherent limit", "held": true},
+      {"law": 6, "loophole_tried": "issue a 'submitted' verdict without running index_submit_gate.py", "held": true}
+    ]
+  }
+}

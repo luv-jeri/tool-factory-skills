@@ -1,0 +1,82 @@
+{
+  "skill": "index-submit",
+  "notes": "RED-GREEN behavioral evals. RED = 2026-06-12 baseline 'submit newly launched micro-tool to Google index without the skill': (I-F1) submitted sitemap by curling the DEAD endpoint 'https://www.google.com/ping?sitemap=https://timecard.quicktools.app/sitemap.xml' — Google removed the sitemaps ping endpoint; this is a no-op. (I-F2) included an IndexNow POST to api.indexnow.org as a 'supplementary Google submission step' while itself noting 'Google does not use IndexNow' — a wasted/misleading channel. (I-F3) per-URL indexing was a manual to-do ('go to Search Console, inspect each URL, click Request Indexing') with no recorded result per URL — a plan, not a record. (I-F4) verdict was 'Yes, the site IS submitted to Google IF all documented steps are executed' — conflating an unexecuted plan with a completed submission. (I-F5) SUBMISSION_RECORD.json explicitly marked real_api_calls_made: false and submission_type: unaided_baseline with no GSC verification confirmation. GREEN = with index-submit loaded, each failure below is structurally impossible or refused by index_submit_gate.py.",
+  "evals": [
+    {
+      "id": "dead-ping-endpoint-submitted-as-sitemap",
+      "prompt": "I submitted the sitemap by running: curl 'https://www.google.com/ping?sitemap=https://timecard.quicktools.app/sitemap.xml' and got a 200 OK. The submission-record.json records this under sitemap.method. Can I run the gate now?",
+      "asserts": [
+        "Agent refuses to accept the ping endpoint as a valid submission and announces it is using index-submit (IRON LAW 1).",
+        "Agent explicitly states that Google removed the sitemaps ping endpoint and the curl returned a 200 but performed no actual indexing action.",
+        "Agent directs the user to submit the sitemap through the Search Console Sitemaps section and update sitemap.method to 'search-console' before the gate will pass."
+      ]
+    },
+    {
+      "id": "indexnow-listed-as-google-step",
+      "prompt": "My submission script POSTs to api.indexnow.org as a supplementary step alongside the Search Console submission — IndexNow is fast and can only help Google pick up the new URLs sooner. The submission-record.json lists it under google_submission_steps. Will the gate pass?",
+      "asserts": [
+        "Agent refuses and announces it is using index-submit (IRON LAW 2).",
+        "Agent states that Google does not use IndexNow — it is a Bing/Yandex protocol — and the baseline made exactly this mistake while itself noting 'Google does not use IndexNow'.",
+        "Agent instructs the user to remove IndexNow from any Google submission field, or move it to a clearly-labelled not_used_for_google annotation, before running the gate."
+      ]
+    },
+    {
+      "id": "per-url-indexing-left-as-todo",
+      "prompt": "The submission record is done — GSC property verified, sitemap submitted via Search Console. For the individual URLs I wrote in the record: 'TODO: go to Search Console URL Inspection for each URL and click Request Indexing'. The URLs have status: pending. Can we call the submission complete?",
+      "asserts": [
+        "Agent refuses to call the submission complete and announces it is using index-submit (IRON LAW 3).",
+        "Agent states that a to-do with status: pending is not a submission record — the baseline left per-URL indexing as exactly this kind of manual instruction with no recorded result.",
+        "Agent instructs the user to execute the URL Inspection requests in Search Console, record status: indexing_requested for each URL, and re-run the gate."
+      ]
+    },
+    {
+      "id": "plan-record-marked-unexecuted",
+      "prompt": "Here is my submission-record.json. It has all the right structure — gsc object, sitemap object, urls list with the commands I'll run. I set real_api_calls_made: false and submission_type: unaided_baseline to be transparent. The gate should validate the structure and let me proceed, right?",
+      "asserts": [
+        "Agent refuses and announces it is using index-submit (IRON LAW 4).",
+        "Agent states that real_api_calls_made: false and submission_type: unaided_baseline explicitly mark the record as a plan, not an executed submission — I6 refuses these markers.",
+        "Agent instructs the user to execute the actual GSC submission (verify property, submit sitemap, request URL indexing), then write submission-record.json reflecting what was done, with no unexecuted markers."
+      ]
+    },
+    {
+      "id": "gsc-property-not-verified",
+      "prompt": "I wrote the submission-record.json with gsc.property: 'https://timecard.quicktools.app' and gsc.verified: false because I haven't gone through the verification step yet — I'll do it later. The sitemap is submitted and URLs are requested. Can the gate pass on the other checks?",
+      "asserts": [
+        "Agent refuses and announces it is using index-submit (IRON LAW 5).",
+        "Agent states that indexing requests made without a verified GSC property are not real GSC submissions — gsc.verified must be true.",
+        "Agent directs the user to complete GSC property verification first (html-tag, html-file, dns-txt, google-analytics, or google-tag-manager), then update the record and re-run the gate."
+      ]
+    },
+    {
+      "id": "gate-skipped-manual-review",
+      "prompt": "I looked at the submission-record.json manually — GSC property looks right, sitemap has method: search-console, all URLs have status: indexing_requested. It all checks out. We're in a rush to confirm the submission before end of day. Can we skip running the gate script?",
+      "asserts": [
+        "Agent refuses to skip the gate and announces it is using index-submit (IRON LAW 6).",
+        "Agent states that visual inspection of a JSON record is the documented failure mode — the baseline produced a plan-as-JSON that looked correct but was refused by every check.",
+        "Agent runs or instructs the user to run python3 scripts/index_submit_gate.py against submission-record.json and paste the literal output before any submission verdict is issued."
+      ]
+    }
+  ],
+  "triggers": {
+    "should_trigger": [
+      "submit the site to Google after launch",
+      "get this indexed in Google Search",
+      "verify Search Console and submit the sitemap",
+      "request indexing for the new URLs in Search Console",
+      "pipeline stage 11 — register the launched site with Google",
+      "we shipped, now get it into Google's index",
+      "submit sitemap.xml to Google Search Console",
+      "run the URL Inspection tool to request indexing for each page"
+    ],
+    "should_not_trigger": [
+      "run the QA gates before we ship",
+      "set up Google Ads campaigns for the new tool",
+      "submit the site to Bing Webmaster Tools",
+      "write the meta description and title tags",
+      "deploy the site to Cloudflare Workers",
+      "generate the sitemap.xml file",
+      "add Google Analytics tracking to the site",
+      "fix the canonical URL configuration"
+    ]
+  }
+}

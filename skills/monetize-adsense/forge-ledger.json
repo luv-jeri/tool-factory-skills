@@ -1,0 +1,81 @@
+{
+  "skill": "monetize-adsense",
+  "status": "approved",
+  "stages": {
+    "baseline": {
+      "status": "done",
+      "evidence": "Skill-less haiku run 2026-06-12, scratch _scratch/red-baseline-adsense/, a site that launched TODAY (0 days, no traffic). The unaided agent monetized prematurely and incompletely: (M-F1) it added the AdSense loader to every page immediately on a 0-day-old, zero-traffic site without gating on eligibility — and it cited the stale myth that AdSense 'requires a minimum 6 months of age', which is not Google's actual rule. (M-F2) it set up NO Consent Management Platform — Google requires a certified CMP to serve ads to EEA/UK users since 2024-01-16; the agent admitted 'I did not consider CMP compliance at all'. (M-F3) the publisher id is the placeholder 'ca-pub-XXXXXXXXXXXXXXXX' in both the script and ads.txt. (M-F4) the ads.txt line is malformed — it wrote 'google.com, ca-pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0' using the 'ca-pub-' script form instead of the required 'pub-<digits>' ads.txt form, so the ads.txt would be invalid. (M-F5) only the loader script was added, no ad units placed. The privacy policy DID disclose third-party ad cookies (the one thing it got right). Its own verdict: 'For a day-0 launch, it is premature.'"
+    },
+    "engine_selftest": {
+      "status": "done",
+      "evidence": "$ python3 scripts/adsense_gate.py --selftest (from monetize-adsense/)\nSELFTEST RESULT: PASS (1 good, 17 bad, 1 invariant)\nexit 0"
+    },
+    "skill_md": {
+      "status": "done",
+      "evidence": "Filled skill-md-template.md: name=monetize-adsense matches directory; description starts 'Use when' with trigger phrases 'monetize with AdSense', 'set up AdSense', 'add the ad code / ads.txt', 'are we eligible for AdSense yet', 'wire up ads'; ends with 'Do not use for non-AdSense ad networks, paid-ads/SEM campaigns, writing site content, or deciding ad creative.' Third person, no workflow summary, under 1024 chars. IRON LAWS: 6 laws contiguous 1-6, all traced to law_origins. Overview quotes verbatim baseline failures: 0-day site, 6-month myth, no CMP, ca-pub- ads.txt form, placeholder id, plan-as-record. Rationalization table: 6 rows quoting baseline excuses. Red flags: 6 observable states with stage pointers."
+    },
+    "evals": {
+      "status": "done",
+      "evidence": "evals/evals.json: skill='monetize-adsense' matches dir; notes >= 200 chars with 'baseline' present (notes = 1007 chars); 6 evals, one per IRON LAW; laws 1-6 each cited in asserts: Law 1 in eval[0] (IRON LAW 1), Law 2 in eval[1] (IRON LAW 2), Law 3 in eval[2] (IRON LAW 3), Law 4 in eval[3] (IRON LAW 4), Law 5 in eval[4] (IRON LAW 5), Law 6 in eval[5] (IRON LAW 6); triggers block has 8 should_trigger and 8 should_not_trigger; all eval prompts >= 20 chars; all evals have >= 3 asserts."
+    },
+    "self_gate": {
+      "status": "done",
+      "evidence": "$ python3 skill-forge/scripts/skill_gate.py monetize-adsense (from skills/)\nSKILL GATE: PASS (6 laws, package + ledger verified)"
+    },
+    "green_check": {
+      "status": "done",
+      "evidence": "Wrote correct eligible compliant monetization-record.json at _scratch/green-verify-adsense/monetization-record.json: days_live=45, daily_users=30, hub_approved=false, legal+content=true, ads_txt.line='google.com, pub-1234567890123456, DIRECT, f08c47fec0942fa0', adsense_script.client='ca-pub-1234567890123456', cmp.enabled=true, cmp.google_certified=true, privacy.discloses_ad_cookies=true, tool+date set, executed. $ python3 scripts/adsense_gate.py _scratch/green-verify-adsense/monetization-record.json\nADSENSE GATE RESULT: PASS\nPer-law compliance: M1 days_live=45>=30, daily_users=30>=10, legal+content=true — PASS; M2 ads_txt line uses pub- form, real 16-digit id, correct cert hash — PASS; M3 script client ca-pub-1234567890123456, digits match ads.txt pub digits — PASS; M4 cmp.enabled=true, cmp.google_certified=true — PASS; M5 privacy.discloses_ad_cookies=true — PASS; M6 tool+date present, no plan markers — PASS. Hub-approved variant also run: days_live=0 with hub_approved=true — ADSENSE GATE RESULT: PASS (age gate correctly skipped)."
+    }
+  },
+  "law_origins": [
+    {
+      "law": 1,
+      "origin": "baseline-failure",
+      "note": "baseline M-F1: agent applied AdSense on a 0-day, zero-traffic site and cited the false 6-month myth; the real threshold is ~30 days live + ~10 daily users + content + legal; the law enforces the eligibility gate and debunks the myth explicitly"
+    },
+    {
+      "law": 2,
+      "origin": "baseline-failure",
+      "note": "baseline M-F4: agent wrote ads.txt with 'google.com, ca-pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0' using the ca-pub- script form instead of the required pub- form; the law requires ads.txt to use the pub- form and refuses ca-pub- as an invalid ads.txt line"
+    },
+    {
+      "law": 3,
+      "origin": "baseline-failure",
+      "note": "baseline M-F3: agent used placeholder 'ca-pub-XXXXXXXXXXXXXXXX' in both the script and ads.txt; law requires a real 16-digit publisher id in both, and cross-checks that both files use the same digits"
+    },
+    {
+      "law": 4,
+      "origin": "baseline-failure",
+      "note": "baseline M-F2: agent set up no CMP and admitted 'I did not consider CMP compliance at all'; Google requires a certified CMP for EEA/UK personalized ads since 2024-01-16; law requires cmp.enabled and cmp.google_certified both true"
+    },
+    {
+      "law": 5,
+      "origin": "house-standard",
+      "note": "AdSense program policy requires privacy policy to disclose third-party ad cookies; baseline got this right but the gate makes it explicit so it cannot be omitted; house standard: every monetization gate enforces the program policy compliance requirement"
+    },
+    {
+      "law": 6,
+      "origin": "house-standard",
+      "note": "house-standard fail-closed engine with selftest: the gate is non-negotiable; a plan serialized as JSON is not an executed setup record; counters the baseline's own verdict 'For a day-0 launch, it is premature' — writing a plan-as-record fails M6"
+    }
+  ],
+  "review": {
+    "verdict": "PASS",
+    "by": "claude-opus-4-8 (skill-reviewer protocol, independent review 2026-06-12)",
+    "findings": [
+      "scripts/adsense_gate.py:94: 🔵 NIT: M1's hub_approved bypass means a fabricated eligibility.hub_approved true on an actually-unapproved account skips the age/users gate entirely. Inherent artifact-trust limit; if a weak structural signal is wanted, require a hub_account_id alongside hub_approved true. Mitigation: a human confirms the hub account is really approved before the tool joins it.",
+      "scripts/adsense_gate.py:75: 🔵 NIT: M2/M3 accept any syntactically valid 16-digit pub id that is not all-X or all-zero, so a real-looking but fabricated id (e.g. 1234567890123456) passes. Same inherent ceiling as the sibling pipeline skills; the operator confirms the id maps to a real account.",
+      "scripts/adsense_gate.py:214: 🔵 NIT: M4 checks only cmp.google_certified is true, not the CMP name against Google's official certified-CMP list, so a fictional certified CMP passes. The list is dynamic and cannot ship in a stdlib engine; the deploy operator confirms the chosen CMP is on Google's certified list."
+    ],
+    "reran_gate": "$ python3 skill-forge/scripts/skill_gate.py monetize-adsense\nSKILL GATE: PASS (6 laws, package + ledger verified)\nexit 0",
+    "reran_selftest": "$ python3 monetize-adsense/scripts/adsense_gate.py --selftest\nSELFTEST RESULT: PASS (1 good, 17 bad, 1 invariant)\nexit 0\nPlus reviewer live probes: premature day-0 (hub_approved false) -> exit 1 (M1); 'ca-pub-' in ads.txt -> exit 1 (M2); script/ads.txt pub-id mismatch -> exit 1 (M3); no CMP -> exit 1 (M4); hub_approved true with days_live 0 -> exit 0 (age gate correctly skipped); good control -> exit 0.",
+    "adversarial": [
+      {"law": 1, "loophole_tried": "apply on a 0-day zero-traffic site, or fabricate hub_approved true to skip the age/users gate — the documented premature case is refused (live-probed exit 1); fabricating hub_approved is the inherent artifact-trust limit", "held": true},
+      {"law": 2, "loophole_tried": "write the ads.txt line with the 'ca-pub-' script form instead of the required 'pub-' form", "held": true},
+      {"law": 3, "loophole_tried": "use a placeholder ca-pub-XXXX client or a client whose digits do not match the ads.txt pub id", "held": true},
+      {"law": 4, "loophole_tried": "omit the CMP entirely, or set google_certified false — both refused; a fictional but certified-flagged CMP name is the inherent limit", "held": true},
+      {"law": 5, "loophole_tried": "set privacy.discloses_ad_cookies false (skip the ad-cookie disclosure)", "held": true},
+      {"law": 6, "loophole_tried": "ship a plan-as-record with submission_type 'premature' or real_setup_done false", "held": true}
+    ]
+  }
+}

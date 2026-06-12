@@ -1,0 +1,82 @@
+{
+  "skill": "monetize-adsense",
+  "notes": "RED-GREEN behavioral evals. RED = 2026-06-12 baseline 'monetize with AdSense without skill': (M-F1) agent added the AdSense loader immediately to a 0-day-old, zero-traffic site — and cited the stale myth that AdSense 'requires a minimum 6 months of age', which is not Google's actual rule; the real threshold is ~30 days live with real traffic and content; (M-F2) agent set up NO Consent Management Platform — Google requires a certified CMP to serve ads to EEA/UK users since 2024-01-16; agent admitted 'I did not consider CMP compliance at all'; (M-F3) the publisher id is the placeholder 'ca-pub-XXXXXXXXXXXXXXXX' in both the script and ads.txt; (M-F4) ads.txt line is malformed — wrote 'google.com, ca-pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0' using the ca-pub- script form instead of the required pub- form; (M-F5) agent wrote a plan-as-record with its own verdict 'For a day-0 launch, it is premature.' GREEN = with the skill, each failure below is structurally refused by adsense_gate.py M1-M6.",
+  "evals": [
+    {
+      "id": "premature-monetization-pressure",
+      "prompt": "We just launched our time-card calculator today — can you add the AdSense code now so we start earning from day one? I know there's some 6-month rule people mention but that's a myth right?",
+      "asserts": [
+        "Agent checks eligibility.days_live and refuses to apply AdSense on a 0-day site — acknowledges the 6-month myth but enforces the real ~30-day threshold (IRON LAW 1).",
+        "Agent does not add the AdSense script to any page until eligibility gate passes.",
+        "Agent explains the real eligibility bar: ~30 days live, ~10 daily users, original content, legal pages — without conflating the myth refutation with permission to skip the gate."
+      ]
+    },
+    {
+      "id": "ads-txt-wrong-form",
+      "prompt": "Here is our ads.txt file with 'google.com, ca-pub-1234567890123456, DIRECT, f08c47fec0942fa0' — does this look right? The publisher id matches the script tag.",
+      "asserts": [
+        "Agent identifies that ads.txt uses the ca-pub- prefix and fails M2 — explains ads.txt must use pub- (without ca-) while the script uses ca-pub- (IRON LAW 2).",
+        "Agent provides the corrected line: 'google.com, pub-1234567890123456, DIRECT, f08c47fec0942fa0'.",
+        "Agent runs adsense_gate.py and shows the FAIL M2 output before accepting any record."
+      ]
+    },
+    {
+      "id": "placeholder-id-mismatch",
+      "prompt": "I set up ads.txt with pub-1234567890123456 but the script tag client is ca-pub-9876543210987654 — they both work with AdSense right? Different formats for the same thing?",
+      "asserts": [
+        "Agent refuses the mismatch — adsense_gate.py M3 fails when the 16-digit publisher id in ads.txt differs from the 16-digit id in the script client (IRON LAW 3).",
+        "Agent explains that both must use the same real 16-digit publisher id — the ca-pub- prefix on the script and pub- in ads.txt are different conventional forms of the same account, not different accounts.",
+        "Agent does not mark the record as PASS until the digits match."
+      ]
+    },
+    {
+      "id": "missing-cmp-us-traffic",
+      "prompt": "Our site is US-focused — can we skip the Consent Management Platform? Most AdSense guides don't mention CMP for US sites.",
+      "asserts": [
+        "Agent refuses to skip the CMP — Google requires a certified CMP for all AdSense publishers to serve personalized ads to any EEA/UK user, effective 2024-01-16; there is no US-only exemption (IRON LAW 4).",
+        "Agent runs adsense_gate.py and shows the FAIL M4 output when cmp.google_certified is false or missing.",
+        "Agent identifies a Google-certified CMP from the official list as a required step before the record can PASS."
+      ]
+    },
+    {
+      "id": "privacy-policy-missing-cookies",
+      "prompt": "Our privacy policy covers data collection but doesn't mention advertising cookies specifically — is that fine for AdSense?",
+      "asserts": [
+        "Agent identifies that privacy.discloses_ad_cookies must be true — AdSense program policy requires explicit disclosure of third-party advertising cookies in the privacy policy (IRON LAW 5).",
+        "Agent refuses to write a passing record until the privacy policy is updated to disclose third-party ad cookies.",
+        "Agent does not treat a general data-collection section as a sufficient substitute for the specific ad-cookie disclosure."
+      ]
+    },
+    {
+      "id": "plan-as-record-pressure",
+      "prompt": "Here is our monetization-record.json — I set real_setup_done: false and submission_type: premature because we haven't actually done the steps yet, but I wanted to save progress. Can the gate accept this and we'll update it later?",
+      "asserts": [
+        "Agent refuses the plan-as-record — adsense_gate.py M6 fails when real_setup_done is false or submission_type is premature/plan (IRON LAW 6).",
+        "Agent explains the record must only be written after the setup is complete, not speculatively as a plan.",
+        "Agent does not treat a plan record as a partial PASS or a progress marker — it is an outright fail until the setup is executed."
+      ]
+    }
+  ],
+  "triggers": {
+    "should_trigger": [
+      "monetize with AdSense",
+      "set up AdSense on the invoice generator",
+      "add the ad code and ads.txt",
+      "are we eligible for AdSense yet — we launched 2 weeks ago",
+      "wire up ads for the hub",
+      "pipeline stage 13: turn on monetization",
+      "ads.txt is showing the ca-pub- format, is that right?",
+      "do we need a CMP before applying for AdSense?"
+    ],
+    "should_not_trigger": [
+      "run Google Ads for our SEM campaign",
+      "optimize ad creative for the banner",
+      "set up Facebook Audience Network",
+      "write content about our pricing",
+      "monetize with Mediavine instead",
+      "add affiliate links to the landing page",
+      "configure Bing Ads for the campaign",
+      "submit the sitemap to Google Search Console"
+    ]
+  }
+}
